@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Budget app 2026 Django edition" />
+
+    <title>Budget {% block title%}{% endblock title %}</title>
+
+    <!-- Favicon -->
+    {% comment %}
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    {% endcomment %}
+
+    <!-- CSS -->
+    {% comment %}
+    <link rel="stylesheet" href="styles.css" />
+    {% endcomment %}
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.violet.min.css"
+    />
+    <style>
+      :root {
+        --pico-font-size: 1rem;
+        --success: #21E299;
+        --error: #EE402E;
+      }
+
+      body { height: 100vh }
+      main { height: 100%; }
+      .hidden { display: none; }
+      .smaller { padding: calc(var(--pico-spacing) / 4) calc(var(--pico-spacing) / 2); }
+      .spinning { animation: spin 0.9s infinite; }
+
+      @-ms-keyframes spin {
+        from {
+          -ms-transform: rotate(0deg);
+        }
+        to {
+          -ms-transform: rotate(360deg);
+        }
+      }
+      @-moz-keyframes spin {
+        from {
+          -moz-transform: rotate(0deg);
+        }
+        to {
+          -moz-transform: rotate(360deg);
+        }
+      }
+      @-webkit-keyframes spin {
+        from {
+          -webkit-transform: rotate(0deg);
+        }
+        to {
+          -webkit-transform: rotate(360deg);
+        }
+      }
+      @keyframes spin {
+        from {
+          transform: rotate(0deg);
+        }
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      .htmx-indicator {
+        opacity: 0;
+        display: none;
+      }
+      .htmx-request .htmx-indicator,
+      .htmx-request.htmx-indicator {
+        opacity: 1;
+        display: block;
+        transition: opacity 200ms ease-in;
+      }
+
+      .htmx-request.htmx-indicator + .htmx-not-indicator,
+      .htmx-request .htmx-indicator + .htmx-not-indicator {
+        display: none;
+      }
+    </style>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap-grid.min.css"
+    />
+    {% block styles %}{% endblock styles %}
+
+    <script
+      defer
+      src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.10/dist/htmx.min.js"
+    ></script>
+    <script
+      defer
+      src="https://cdn.jsdelivr.net/npm/alpinejs@3.15.11/dist/cdn.min.js"
+    ></script>
+    <script defer type="module">
+      import {
+        createIcons,
+        ArrowLeft,
+        ArrowRight,
+        FileUp,
+        Loader,
+      } from "https://cdn.jsdelivr.net/npm/lucide@1.9.0/+esm";
+
+      function loadIcons() {
+        createIcons({
+          icons: {
+            ArrowLeft,
+            ArrowRight,
+            FileUp,
+            Loader,
+          },
+        });
+      }
+
+      htmx.config.globalViewTransitions = true;
+      htmx.onLoad(function (elt) {
+        loadIcons();
+      });
+
+      loadIcons();
+    </script>
+    {% block scripts %}{% endblock scripts %}
+  </head>
+  <body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+    <header>
+      <nav><!-- navigation --></nav>
+    </header>
+
+    <main class="container">
+      {% block content %}
+      <p>Main content</p>
+      {% endblock content %}
+    </main>
+
+    <footer>
+      <!-- footer content -->
+    </footer>
+  </body>
+</html>

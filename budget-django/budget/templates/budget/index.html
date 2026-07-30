@@ -1,0 +1,49 @@
+{% extends "base.html" %} {% block content %}
+<section class="row justify-content-center">
+  <h1 class="col-12 col-md-4">Overzicht</h1>
+  <div class="col-6 col-md-4" x-data>
+    <form
+      action="{% url "transactions:upload" %}"
+      method="POST"
+      enctype="multipart/form-data"
+      hx-boost
+      hx-indicator=".spinning"
+      hx-on::after-request="this.reset()"
+    >
+      {% csrf_token %}
+      <input
+        type="file"
+        name="file"
+        data-testid="file-input"
+        style="display: none"
+        x-ref="file"
+        @change="$refs.submit.click()"
+      />
+
+      <input type="submit" x-ref="submit" style="display: none" />
+
+      <button
+        type="button"
+        class="secondary d-flex align-items-center"
+        @click="$refs.file.click()"
+      >
+        <i data-lucide="loader" class="spinning htmx-indicator"></i>
+        <i class="htmx-not-indicator" data-lucide="file-up"></i>
+        <span>Voeg toe</span>
+      </button>
+    </form>
+  </div>
+
+  <div class="col-6 col-md-4" data-testid="nav-container" hx-boost="true">
+    <a class="outline secondary" role="button" href="{% url "budget:home" date_previous.year date_previous.month %}" data-testid="nav-previous"><i data-lucide="arrow-left" width="16" height="16"></i></a>
+    <a role="button" class="outline secondary" data-testid="nav-today" href="{% url "budget:home" %}">nu</a>
+    <a class="outline secondary" role="button" href="{% url "budget:home" date_next.year date_next.month %}" data-testid="nav-next">
+      <i data-lucide="arrow-right" width="16" height="16"></i>
+    </a>
+  </div>
+</section>
+
+<section id="overview">
+  {% include "budget/overview.html" with summary=summary week=week iban_selected=iban%}
+</section>
+{% endblock content %}

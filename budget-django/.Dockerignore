@@ -1,0 +1,73 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+*.egg
+dist/
+build/
+venv/
+env/
+.env
+.venv
+
+# Poetry
+poetry.lock          # optional: only ignore if you re-lock in Dockerfile; better to keep?
+# Actually, keep poetry.lock in context – comment this out.
+
+# Django / Project specific
+db.sqlite3
+*.log
+*.pot
+*.pyc
+local_settings.py
+/settings/local.py
+/staticfiles/
+/static/
+/media/
+/mediafiles/
+
+# Version control
+.git/
+.gitignore
+.gitattributes
+.dockerignore
+.gitlab-ci.yml
+.github/
+
+# IDE / OS
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Testing & coverage
+.coverage
+.tox/
+.pytest_cache/
+htmlcov/
+.coverage.*
+cover/
+
+# Node / frontend (if any)
+node_modules/
+package-lock.json
+yarn.lock
+
+# Docker / k8s local files
+*.yaml
+*.yml
+!pyproject.toml
+!poetry.lock   # explicitly allow these two
+.docker/
+
+# Secrets (never include)
+*.key
+*.pem
+*.crt
+.secrets/
