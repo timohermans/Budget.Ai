@@ -38,36 +38,36 @@ public class BudgetPage
 
     public async Task<string> GetMonthDisplayAsync()
     {
-        return await _page.Locator(".stats h2").First.TextContentAsync() ?? "";
+        return await _page.GetByTestId("month-display").TextContentAsync() ?? "";
     }
 
     public async Task<decimal> GetBudgetAsync()
     {
-        var text = await _page.Locator("[data-testid='budget-value']").TextContentAsync();
+        var text = await _page.GetByTestId("budget-value").TextContentAsync();
         return ParseDecimal(text);
     }
 
     public async Task<decimal> GetIncomeAsync()
     {
-        var text = await _page.Locator("[data-testid='income-value']").TextContentAsync();
+        var text = await _page.GetByTestId("income-value").TextContentAsync();
         return ParseDecimal(text);
     }
 
     public async Task<decimal> GetExpensesAsync()
     {
-        var text = await _page.Locator("[data-testid='expenses-value']").TextContentAsync();
+        var text = await _page.GetByTestId("expenses-value").TextContentAsync();
         return ParseDecimal(text);
     }
 
     public async Task<decimal> GetSpentTotalAsync()
     {
-        var text = await _page.Locator("#spent-total").TextContentAsync();
+        var text = await _page.GetByTestId("spent-total").TextContentAsync();
         return ParseDecimal(text);
     }
 
     public async Task<decimal> GetLeftTotalAsync()
     {
-        var element = _page.Locator("#left-total");
+        var element = _page.GetByTestId("left-total");
         var text = await element.TextContentAsync();
         if (text != null)
             text = text.Replace("over", "").Trim();
@@ -82,7 +82,7 @@ public class BudgetPage
     public async Task ClickPreviousMonthAsync()
     {
         var oldUrl = _page.Url;
-        await _page.Locator("[data-testid='nav-previous']").ClickAsync();
+        await _page.GetByTestId("nav-previous").ClickAsync();
         await _page.WaitForFunctionAsync("oldUrl => window.location.href !== oldUrl", oldUrl);
         await _page.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
     }
@@ -90,20 +90,15 @@ public class BudgetPage
     public async Task ClickNextMonthAsync()
     {
         var oldUrl = _page.Url;
-        await _page.Locator("[data-testid='nav-next']").ClickAsync();
+        await _page.GetByTestId("nav-next").ClickAsync();
         await _page.WaitForFunctionAsync("oldUrl => window.location.href !== oldUrl", oldUrl);
         await _page.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
     }
 
     public async Task ClickCurrentMonthAsync()
     {
-        var navContainer = _page.Locator("[hx-boost='true']").Last;
-        var buttons = await navContainer.Locator("a").AllAsync();
-        if (buttons.Count >= 2)
-        {
-            await buttons[1].ClickAsync();
-            await _page.WaitForLoadStateAsync(LoadState.NetworkIdle);
-        }
+        await _page.GetByTestId("nav-today").ClickAsync();
+        await _page.GetByTestId("month-display").WaitForAsync(new() { State = WaitForSelectorState.Visible });
     }
 
     public WeekCardComponent WeekCard(int weekNumber)
@@ -113,13 +108,13 @@ public class BudgetPage
 
     public async Task<List<IbanBalanceInfo>> GetIbanBalancesAsync()
     {
-        var ibanSections = await _page.Locator("[id^='iban-']").AllAsync();
+        var ibanSections = await _page.GetByTestId("iban-section").AllAsync();
         var result = new List<IbanBalanceInfo>();
         foreach (var section in ibanSections)
         {
             var id = await section.GetAttributeAsync("id") ?? "";
             var iban = id.Replace("iban-", "");
-            var balanceText = await section.Locator("b").TextContentAsync();
+            var balanceText = await section.GetByTestId("iban-balance").TextContentAsync();
             result.Add(new IbanBalanceInfo
             {
                 Iban = iban,
@@ -131,8 +126,7 @@ public class BudgetPage
 
     public async Task<IbanBalanceInfo> ClickIbanAsync(string iban)
     {
-        var section = _page.Locator($"#iban-{iban}");
-        await section.Locator(".summary").ClickAsync();
+        await _page.GetByTestId($"iban-{iban}-summary").ClickAsync();
         await _page.WaitForLoadStateAsync(LoadState.NetworkIdle);
         return new IbanBalanceInfo { Iban = iban };
     }

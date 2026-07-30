@@ -18,7 +18,7 @@ public class UploadPage
         await _page.GotoAsync(Routes.Budget());
         await _page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
-        await _page.Locator("input[type=file]").SetInputFilesAsync(new FilePayload
+        await _page.GetByTestId("file-input").SetInputFilesAsync(new FilePayload
         {
             Name = "test.csv",
             MimeType = "text/csv",
@@ -33,7 +33,7 @@ public class UploadPage
         await _page.GotoAsync(Routes.Budget());
         await _page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
-        await _page.Locator("input[type=file]").SetInputFilesAsync(new FilePayload
+        await _page.GetByTestId("file-input").SetInputFilesAsync(new FilePayload
         {
             Name = filename,
             MimeType = "text/plain",
@@ -48,8 +48,8 @@ public class UploadPage
         await _page.GotoAsync(Routes.Budget());
         await _page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
-        await _page.Locator("input[type=file]").EvaluateAsync("el => el.style.display = 'block'");
-        await _page.Locator("input[type=file]").SetInputFilesAsync(new string[] { });
+        await _page.GetByTestId("file-input").EvaluateAsync("el => el.style.display = 'block'");
+        await _page.GetByTestId("file-input").SetInputFilesAsync(new string[] { });
         await _page.WaitForLoadStateAsync(LoadState.NetworkIdle);
     }
 }

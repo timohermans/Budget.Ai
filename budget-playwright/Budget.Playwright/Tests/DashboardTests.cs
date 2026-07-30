@@ -147,10 +147,10 @@ public class DashboardTests : PlaywrightTestBase
     {
         var last = TestConstants.LastMonth;
         await UploadCsvAsync([
-            new TestTransactionBuilder().On(new DateOnly(last.Year, last.Month, 15)).Amount(3000m).Code("sb").Named("Employer").DescribedAs("Salary").FollowNumber(1),
-            new TestTransactionBuilder().On(new DateOnly(last.Year, last.Month, 15)).Amount(-800m).Code("cb").Named("Insurance Co").DescribedAs("Health insurance").FollowNumber(2),
-            new TestTransactionBuilder().On(new DateOnly(TestConstants.Year, TestConstants.Month, 3)).Amount(-150m).Code("bc").Named("Albert Heijn").DescribedAs("Groceries").FollowNumber(3),
-            new TestTransactionBuilder().On(new DateOnly(TestConstants.Year, TestConstants.Month, 12)).Amount(2000m).Code("sb").Named("Freelance Client").Iban("NL98INGB9876543210").DescribedAs("Invoice").FollowNumber(4),
+            new TestTransactionBuilder().Iban("NL12RABO0123456789").On(new DateOnly(last.Year, last.Month, 15)).Amount(3000m).Code("sb").Named("Employer").DescribedAs("Salary").FollowNumber(1),
+            new TestTransactionBuilder().Iban("NL12RABO0123456789").On(new DateOnly(last.Year, last.Month, 15)).Amount(-800m).Code("cb").Named("Insurance Co").DescribedAs("Health insurance").FollowNumber(2),
+            new TestTransactionBuilder().Iban("NL12RABO0123456789").On(new DateOnly(TestConstants.Year, TestConstants.Month, 3)).Amount(-150m).Code("bc").Named("Albert Heijn").DescribedAs("Groceries").FollowNumber(3),
+            new TestTransactionBuilder().Iban("NL98INGB9876543210").On(new DateOnly(TestConstants.Year, TestConstants.Month, 12)).Amount(2000m).Code("sb").Named("Freelance Client").DescribedAs("Invoice").FollowNumber(4),
         ]);
 
         var budget = new BudgetPage(Page);
