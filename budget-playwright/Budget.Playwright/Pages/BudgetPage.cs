@@ -28,11 +28,6 @@ public class BudgetPage
         await _page.GotoAsync(Routes.Budget(year, month, week));
     }
 
-    public async Task GotoAsync(int year, int month, string iban)
-    {
-        await _page.GotoAsync(Routes.Budget(year, month, iban));
-    }
-
     public async Task<string> GetMonthDisplayAsync()
     {
         return await _page.GetByTestId("month-display").TextContentAsync() ?? "";
@@ -88,12 +83,6 @@ public class BudgetPage
         await ExpectMonthAsync(expectedMonth);
     }
 
-    public async Task ClickCurrentMonthAsync(DateOnly expectedMonth)
-    {
-        await _page.GetByTestId("nav-today").ClickAsync();
-        await ExpectMonthAsync(expectedMonth);
-    }
-
     private async Task ExpectMonthAsync(DateOnly expectedMonth)
     {
         var expected = expectedMonth.ToString("MMMM", CultureInfo.InvariantCulture);
@@ -122,13 +111,6 @@ public class BudgetPage
             });
         }
         return result;
-    }
-
-    public async Task<IbanBalanceInfo> ClickIbanAsync(string iban)
-    {
-        await _page.GetByTestId($"iban-{iban}-summary").ClickAsync();
-        await _page.WaitForURLAsync("**/" + iban);
-        return new IbanBalanceInfo { Iban = iban };
     }
 
     public async Task<string?> GetPageErrorAsync()

@@ -15,17 +15,34 @@ public class DashboardTests : PlaywrightTestBase
         var monthDisplay = await budget.GetMonthDisplayAsync();
         Assert.IsNotNull(monthDisplay);
         Assert.AreNotEqual("", monthDisplay);
+
+        Assert.AreEqual(0m, await budget.GetBudgetAsync(), "Empty budget should be zero");
+        Assert.AreEqual(0m, await budget.GetSpentTotalAsync(), "Empty spent total should be zero");
+        Assert.AreEqual(0m, await budget.GetLeftTotalAsync(), "Empty left total should be zero");
     }
 
     [TestMethod]
     public async Task Dashboard_SpecificMonth_ShowsCorrectData()
     {
+        var last = TestConstants.LastMonth;
+        await UploadCsvAsync([
+            new TestTransactionBuilder().On(new DateOnly(last.Year, last.Month, 15)).Amount(3000m).Code("sb").Named("Employer").FollowNumber(1),
+            new TestTransactionBuilder().On(new DateOnly(last.Year, last.Month, 15)).Amount(-800m).Code("cb").Named("Insurance Co").FollowNumber(2),
+            new TestTransactionBuilder().On(new DateOnly(TestConstants.Year, TestConstants.Month, 3)).Amount(-150m).Code("bc").Named("Albert Heijn").FollowNumber(3),
+        ]);
+
         var budget = new BudgetPage(Page);
         await budget.GotoAsync(TestConstants.Year, TestConstants.Month);
 
         var monthDisplay = await budget.GetMonthDisplayAsync();
         var expected = TestConstants.FirstDay.ToString("MMMM");
         StringAssert.Contains(monthDisplay, expected, StringComparison.OrdinalIgnoreCase);
+
+        Assert.AreEqual(3000m, await budget.GetIncomeAsync(), "Income should be the fixed salary");
+        Assert.AreEqual(800m, await budget.GetExpensesAsync(), "Expenses should be the fixed insurance");
+        Assert.AreEqual(2200m, await budget.GetBudgetAsync(), "Budget should be income - expenses");
+        Assert.AreEqual(150m, await budget.GetSpentTotalAsync(), "Spent should be the variable expense");
+        Assert.AreEqual(2050m, await budget.GetLeftTotalAsync(), "Left should be budget - spent");
     }
 
     [TestMethod]
@@ -67,8 +84,12 @@ public class DashboardTests : PlaywrightTestBase
 
         var weekCard = budget.WeekCard(1);
         var weekBudget = await weekCard.GetBudgetAsync();
+        var weekSpent = await weekCard.GetSpentAsync();
+        var weekLeft = await weekCard.GetLeftAsync();
 
         Assert.AreEqual(387.10m, weekBudget, $"Week budget should be 387,10 in {TestConstants.Year}-{TestConstants.Month}");
+        Assert.AreEqual(150m, weekSpent, "Week spent should include the Albert Heijn expense");
+        Assert.AreEqual(237.10m, weekLeft, "Week left should be week budget minus week spent");
     }
 
     [TestMethod]
@@ -142,12 +163,16 @@ public class DashboardTests : PlaywrightTestBase
 
         var ibanBalances = await budget.GetIbanBalancesAsync();
         Assert.HasCount(2, ibanBalances, "Should show 2 IBAN balances");
-        Assert.IsTrue(ibanBalances.Any(b => b.Iban == "NL12RABO0123456789"), "Should include main account IBAN");
-        Assert.IsTrue(ibanBalances.Any(b => b.Iban == "NL98INGB9876543210"), "Should include second account IBAN");
+
+        var main = ibanBalances.Single(b => b.Iban == "NL12RABO0123456789");
+        Assert.AreEqual(-150m, main.Balance, "Main account balance should be net of this month's transactions");
+
+        var second = ibanBalances.Single(b => b.Iban == "NL98INGB9876543210");
+        Assert.AreEqual(2000m, second.Balance, "Second account balance should be net of this month's transactions");
     }
 
     [TestMethod]
-    public async Task Dashboard_TransactionList_LoadsWithoutError()
+    public async Task Dashboard_TransactionList_ShowsTransactionsPerWeek()
     {
         var last = TestConstants.LastMonth;
         await UploadCsvAsync([

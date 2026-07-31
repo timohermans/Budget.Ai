@@ -52,12 +52,4 @@ public class UploadPage
 
         await uploadResponse;
     }
-
-    public async Task SubmitWithoutFileAsync()
-    {
-        await _page.GotoAsync(Routes.Budget());
-
-        await _page.GetByTestId("file-input").EvaluateAsync("el => el.style.display = 'block'");
-        await _page.GetByTestId("file-input").SetInputFilesAsync(new string[] { });
-    }
 }

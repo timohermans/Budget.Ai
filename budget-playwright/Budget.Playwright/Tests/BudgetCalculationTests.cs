@@ -86,9 +86,11 @@ public class BudgetCalculationTests : PlaywrightTestBase
         var budget = new BudgetPage(Page);
         await budget.GotoAsync(TestConstants.Year, TestConstants.Month);
 
-        var weekCard = budget.WeekCard(1);
-        var weekBudget = await weekCard.GetBudgetAsync();
-        Assert.IsGreaterThan(0, weekBudget, "Each week should have a budget > 0");
+        Assert.AreEqual(283.87m, await budget.WeekCard(1).GetBudgetAsync(), "Week 1 (4 days) should get 4/31 of the budget");
+        Assert.AreEqual(496.77m, await budget.WeekCard(2).GetBudgetAsync(), "Week 2 (7 days) should get 7/31 of the budget");
+        Assert.AreEqual(496.77m, await budget.WeekCard(3).GetBudgetAsync(), "Week 3 (7 days) should get 7/31 of the budget");
+        Assert.AreEqual(496.77m, await budget.WeekCard(4).GetBudgetAsync(), "Week 4 (7 days) should get 7/31 of the budget");
+        Assert.AreEqual(425.81m, await budget.WeekCard(5).GetBudgetAsync(), "Week 5 (6 days) should get 6/31 of the budget");
     }
 
     [TestMethod]
@@ -129,20 +131,23 @@ public class BudgetCalculationTests : PlaywrightTestBase
     }
 
     [TestMethod]
-    public async Task Budget_OwnAccountTransfers_Excluded()
+    public async Task Budget_OwnAccountTransferIn_ExcludedFromIncome()
     {
         var last = TestConstants.LastMonth;
         await UploadCsvAsync([
             new TestTransactionBuilder().On(new DateOnly(last.Year, last.Month, 15)).Amount(3000m).Code("sb").Named("Employer").FollowNumber(1),
-            new TestTransactionBuilder().On(new DateOnly(last.Year, last.Month, 16)).Amount(-500m).Code("db").Named("Rabobank").Iban(TestConstants.SavingsIban).IbanOtherParty(TestConstants.SavingsIban).FollowNumber(2),
-            new TestTransactionBuilder().On(new DateOnly(last.Year, last.Month, 17)).Amount(-800m).Code("cb").Named("Insurance Co").FollowNumber(3),
+            new TestTransactionBuilder().On(new DateOnly(last.Year, last.Month, 16)).Amount(500m).Code("db").Named("Rabobank").IbanOtherParty(TestConstants.SavingsIban).FollowNumber(2),
+            new TestTransactionBuilder().On(new DateOnly(last.Year, last.Month, 17)).Amount(-1000m).Code("cb").Named("Insurance Co").Iban(TestConstants.SavingsIban).FollowNumber(3),
         ]);
 
         var budget = new BudgetPage(Page);
         await budget.GotoAsync(TestConstants.Year, TestConstants.Month);
 
+        var income = await budget.GetIncomeAsync();
+        Assert.AreEqual(3000m, income, "Transfer in from own savings account should not count as income");
+
         var budgetAmount = await budget.GetBudgetAsync();
-        Assert.AreEqual(2200m, budgetAmount, "Own-account transfer should not affect budget (3000 - 800)");
+        Assert.AreEqual(3000m, budgetAmount, "Budget should be unaffected by the own-account transfer in");
     }
 
     [TestMethod]
