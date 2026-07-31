@@ -20,15 +20,6 @@ public class DashboardTests : PlaywrightTestBase
     [TestMethod]
     public async Task Dashboard_SpecificMonth_ShowsCorrectData()
     {
-        var last = TestConstants.LastMonth;
-        var twoAgo = last.AddMonths(-1);
-        await UploadCsvAsync([
-            new TestTransactionBuilder().On(new DateOnly(twoAgo.Year, twoAgo.Month, 1)).Amount(3000m).Code("sb").Named("Employer").FollowNumber(1),
-            new TestTransactionBuilder().On(new DateOnly(last.Year, last.Month, 1)).Amount(3000m).Code("sb").Named("Employer").FollowNumber(2),
-            new TestTransactionBuilder().On(new DateOnly(last.Year, last.Month, 15)).Amount(-800m).Code("cb").Named("Insurance Co").FollowNumber(3),
-            new TestTransactionBuilder().On(new DateOnly(TestConstants.Year, TestConstants.Month, 3)).Amount(-150m).Code("bc").Named("Albert Heijn").FollowNumber(4),
-        ]);
-
         var budget = new BudgetPage(Page);
         await budget.GotoAsync(TestConstants.Year, TestConstants.Month);
 
@@ -43,26 +34,19 @@ public class DashboardTests : PlaywrightTestBase
         var current = TestConstants.FirstDay;
         var previous = current.AddMonths(-1);
 
-        await UploadCsvAsync([
-            new TestTransactionBuilder().On(new DateOnly(previous.Year, previous.Month, 1)).Amount(3000m).Code("sb").Named("Employer").DescribedAs("Salary prev month").FollowNumber(1),
-            new TestTransactionBuilder().On(new DateOnly(current.Year, current.Month, 1)).Amount(3200m).Code("sb").Named("Employer").DescribedAs("Salary current month").FollowNumber(2),
-            new TestTransactionBuilder().On(new DateOnly(previous.Year, previous.Month, 15)).Amount(-800m).Code("cb").Named("Insurance Co").DescribedAs("Insurance prev month").FollowNumber(3),
-            new TestTransactionBuilder().On(new DateOnly(current.Year, current.Month, 15)).Amount(-200m).Code("bc").Named("Jumbo").DescribedAs("Groceries current month").FollowNumber(4),
-        ]);
-
         var budget = new BudgetPage(Page);
         await budget.GotoAsync(TestConstants.Year, TestConstants.Month);
 
         var initialMonth = await budget.GetMonthDisplayAsync();
         StringAssert.Contains(initialMonth, current.ToString("MMMM"), StringComparison.OrdinalIgnoreCase);
 
-        await budget.ClickPreviousMonthAsync();
+        await budget.ClickPreviousMonthAsync(previous);
 
         var prevMonth = await budget.GetMonthDisplayAsync();
         StringAssert.Contains(prevMonth, previous.ToString("MMMM"), StringComparison.OrdinalIgnoreCase);
         Assert.AreNotEqual(initialMonth, prevMonth, "Previous month display should differ from initial");
 
-        await budget.ClickNextMonthAsync();
+        await budget.ClickNextMonthAsync(current);
 
         var currentMonth = await budget.GetMonthDisplayAsync();
         StringAssert.Contains(currentMonth, current.ToString("MMMM"), StringComparison.OrdinalIgnoreCase);
@@ -84,7 +68,7 @@ public class DashboardTests : PlaywrightTestBase
         var weekCard = budget.WeekCard(1);
         var weekBudget = await weekCard.GetBudgetAsync();
 
-        Assert.IsGreaterThan(0, weekBudget, "Week budget should be positive");
+        Assert.AreEqual(387.10m, weekBudget, $"Week budget should be 387,10 in {TestConstants.Year}-{TestConstants.Month}");
     }
 
     [TestMethod]
@@ -102,7 +86,7 @@ public class DashboardTests : PlaywrightTestBase
         var weekCard = budget.WeekCard(1);
         var percentage = await weekCard.GetProgressPercentageAsync();
 
-        Assert.IsGreaterThanOrEqualTo(0, percentage);
+        Assert.AreEqual(38.75, percentage, "Percentage in week one of 2099-01 should be 150/387,10");
     }
 
     [TestMethod]
@@ -163,22 +147,52 @@ public class DashboardTests : PlaywrightTestBase
     }
 
     [TestMethod]
-    public async Task Dashboard_TransactionList_LoadsWithoutError() // TODO: hier moeten meer variabele transacties (en kijk daarna via test explorer verder) 
+    public async Task Dashboard_TransactionList_LoadsWithoutError()
     {
         var last = TestConstants.LastMonth;
         await UploadCsvAsync([
             new TestTransactionBuilder().On(new DateOnly(last.Year, last.Month, 15)).Amount(3000m).Code("sb").Named("Employer").FollowNumber(1),
             new TestTransactionBuilder().On(new DateOnly(TestConstants.Year, TestConstants.Month, 3)).Amount(-150m).Code("bc").Named("Albert Heijn").FollowNumber(2),
+            new TestTransactionBuilder().On(new DateOnly(TestConstants.Year, TestConstants.Month, 5)).Amount(-75m).Code("bc").Named("Jumbo").FollowNumber(3),
+            new TestTransactionBuilder().On(new DateOnly(TestConstants.Year, TestConstants.Month, 10)).Amount(-100m).Code("ie").Named("Bol.com").FollowNumber(4),
+            new TestTransactionBuilder().On(new DateOnly(TestConstants.Year, TestConstants.Month, 12)).Amount(-50m).Code("ie").Named("Coolblue").FollowNumber(5),
+            new TestTransactionBuilder().On(new DateOnly(TestConstants.Year, TestConstants.Month, 7)).Amount(-200m).Code("cb").Named("Insurance Co").FollowNumber(6),
         ]);
 
         var budget = new BudgetPage(Page);
-        await budget.GotoAsync(TestConstants.Year, TestConstants.Month);
+        await budget.GotoAsync(TestConstants.Year, TestConstants.Month, 1);
+        var week1 = budget.WeekCard(1);
+        var week1Transactions = await week1.GetTransactionsAsync();
+        Assert.HasCount(1, week1Transactions, "Week 1 should have 1 transaction");
+        Assert.AreEqual(-150m, week1Transactions[0].Amount);
+        Assert.AreEqual("Albert Heijn", week1Transactions[0].NameOtherParty);
+        Assert.AreEqual("03-01", week1Transactions[0].Date);
+        Assert.IsFalse(week1Transactions[0].HasToggle, "Albert Heijn is variable, no toggle");
 
-        var weekCard = budget.WeekCard(1);
-        await weekCard.ClickHeaderAsync();
+        await budget.GotoAsync(TestConstants.Year, TestConstants.Month, 2);
+        var week2 = budget.WeekCard(2);
+        var week2Transactions = await week2.GetTransactionsAsync();
+        Assert.HasCount(3, week2Transactions, "Week 2 should have 3 transactions");
+        var jumbo = week2Transactions.Single(t => t.NameOtherParty == "Jumbo");
+        Assert.AreEqual(-75m, jumbo.Amount);
+        Assert.AreEqual("05-01", jumbo.Date);
+        Assert.IsFalse(jumbo.HasToggle, "Jumbo is variable, no toggle");
+        var bol = week2Transactions.Single(t => t.NameOtherParty == "Bol.com");
+        Assert.AreEqual(-100m, bol.Amount);
+        Assert.AreEqual("10-01", bol.Date);
+        Assert.IsFalse(bol.HasToggle, "Bol.com is variable, no toggle");
+        var insurance = week2Transactions.Single(t => t.NameOtherParty == "Insurance Co");
+        Assert.AreEqual(-200m, insurance.Amount);
+        Assert.AreEqual("07-01", insurance.Date);
+        Assert.IsTrue(insurance.HasToggle, "Insurance Co is fixed, should have toggle");
 
-        var transactions = await weekCard.GetTransactionsAsync();
-        Assert.IsNotEmpty(transactions);
-        Assert.IsTrue(transactions.All(t => t.NameOtherParty.Length > 0));
+        await budget.GotoAsync(TestConstants.Year, TestConstants.Month, 3);
+        var week3 = budget.WeekCard(3);
+        var week3Transactions = await week3.GetTransactionsAsync();
+        Assert.HasCount(1, week3Transactions, "Week 3 should have 1 transaction");
+        Assert.AreEqual(-50m, week3Transactions[0].Amount);
+        Assert.AreEqual("Coolblue", week3Transactions[0].NameOtherParty);
+        Assert.AreEqual("12-01", week3Transactions[0].Date);
+        Assert.IsFalse(week3Transactions[0].HasToggle, "Coolblue is variable, no toggle");
     }
 }

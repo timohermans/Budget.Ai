@@ -191,7 +191,7 @@
       {% for transaction in week_summary.transactions %}
       <div id="transaction-{{transaction.id}}" data-testid="transaction" class="transaction {% if transaction.amount > 0 %}positive{% else %}negative{% endif %}">
         <div>
-          <b class="date">{{ transaction.date|date:'d-m' }}</b>
+          <b class="date" data-testid="date">{{ transaction.date|date:'d-m' }}</b>
           <div>
             {% if transaction.is_fixed or transaction.is_not_fixed %}
             {% include 'transactions/includes/toggle-fixed.html' with transaction=transaction %}
@@ -247,7 +247,7 @@
       {% for transaction in iban_balance.transactions %}
       <div id="transaction-{{transaction.id}}" class="transaction {% if transaction.amount > 0 %}positive{% else %}negative{% endif %}">
         <div>
-          <b class="date">{{ transaction.date|date:'d-m' }}</b>
+          <b class="date" data-testid="date">{{ transaction.date|date:'d-m' }}</b>
           <div>
             {% if transaction.is_fixed or transaction.is_not_fixed %}
             {% include 'transactions/includes/toggle-fixed.html' with transaction=transaction %}

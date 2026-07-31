@@ -84,8 +84,6 @@ public class UploadTests : PlaywrightTestBase
         await upload.UploadViaUiAsync(csv);
 
         var budget = new BudgetPage(Page);
-        await budget.GotoAsync(TestConstants.Year, TestConstants.Month);
-
         var url = await budget.GetCurrentUrlAsync();
         StringAssert.Contains(url, $"{TestConstants.Year}/{TestConstants.Month}");
     }

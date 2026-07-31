@@ -16,7 +16,11 @@ public class UploadPage
     public async Task UploadViaUiAsync(string csvContent)
     {
         await _page.GotoAsync(Routes.Budget());
-        await _page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+
+        var uploadResponse = _page.WaitForResponseAsync(
+            r => r.Url.EndsWith("/transactions/upload", StringComparison.OrdinalIgnoreCase)
+                 && r.Request.Method == "POST");
+        var redirectNavigation = _page.WaitForURLAsync("**/budget/*/*");
 
         await _page.GetByTestId("file-input").SetInputFilesAsync(new FilePayload
         {
@@ -25,13 +29,19 @@ public class UploadPage
             Buffer = Encoding.Latin1.GetBytes(csvContent)
         });
 
-        await _page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+        var response = await uploadResponse;
+        Assert.AreEqual(302, response.Status, "Upload should redirect after processing");
+
+        await redirectNavigation;
     }
 
     public async Task UploadInvalidAsync(string content, string filename = "test.txt")
     {
         await _page.GotoAsync(Routes.Budget());
-        await _page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+
+        var uploadResponse = _page.WaitForResponseAsync(
+            r => r.Url.EndsWith("/transactions/upload", StringComparison.OrdinalIgnoreCase)
+                 && r.Request.Method == "POST");
 
         await _page.GetByTestId("file-input").SetInputFilesAsync(new FilePayload
         {
@@ -40,16 +50,14 @@ public class UploadPage
             Buffer = Encoding.UTF8.GetBytes(content)
         });
 
-        await _page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+        await uploadResponse;
     }
 
     public async Task SubmitWithoutFileAsync()
     {
         await _page.GotoAsync(Routes.Budget());
-        await _page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
         await _page.GetByTestId("file-input").EvaluateAsync("el => el.style.display = 'block'");
         await _page.GetByTestId("file-input").SetInputFilesAsync(new string[] { });
-        await _page.WaitForLoadStateAsync(LoadState.NetworkIdle);
     }
 }

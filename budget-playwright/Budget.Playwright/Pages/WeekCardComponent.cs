@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using Microsoft.Playwright;
 
 namespace Budget.Playwright.Pages;
@@ -39,7 +40,11 @@ public class WeekCardComponent
         var progress = _page.GetByTestId($"progress-week-{_weekNumber}");
         var value = await progress.GetAttributeAsync("value");
         var max = await progress.GetAttributeAsync("max");
-        if (decimal.TryParse(value, out var v) && decimal.TryParse(max, out var m) && m > 0)
+        if (decimal.TryParse(value, System.Globalization.NumberStyles.Any,
+                System.Globalization.CultureInfo.InvariantCulture, out var v) &&
+            decimal.TryParse(max, System.Globalization.NumberStyles.Any,
+                System.Globalization.CultureInfo.InvariantCulture, out var m) &&
+            m > 0)
             return (double)(v / m * 100);
         return 0;
     }
@@ -64,6 +69,7 @@ public class WeekCardComponent
         {
             var amountText = await row.GetByTestId("amount").TextContentAsync();
             var name = await row.GetByTestId("name-other-party").TextContentAsync();
+            var dateText = await row.GetByTestId("date").TextContentAsync();
             var idAttr = await row.GetAttributeAsync("id");
             var id = idAttr?.Replace("transaction-", "") ?? "";
             var toggleButton = row.GetByTestId("toggle-submit");
@@ -73,6 +79,7 @@ public class WeekCardComponent
                 Id = id,
                 Amount = ParseDecimal(amountText),
                 NameOtherParty = name?.Trim() ?? "",
+                Date = dateText?.Trim() ?? "",
                 HasToggle = await toggleButton.IsVisibleAsync(),
             });
         }
@@ -81,8 +88,17 @@ public class WeekCardComponent
 
     public async Task ClickToggleAsync(string transactionId)
     {
-        await _page.GetByTestId($"toggle-{transactionId}").GetByTestId("toggle-submit").ClickAsync();
-        await _page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+        var toggleButton = _page.GetByTestId($"toggle-{transactionId}").GetByTestId("toggle-submit");
+        var isNotFixed = await toggleButton.EvaluateAsync<bool>(
+            "el => el.classList.contains('is-not-fixed')");
+
+        await toggleButton.ClickAsync();
+
+        var expect = Assertions.Expect(toggleButton);
+        if (isNotFixed)
+            await expect.Not.ToHaveClassAsync(new Regex("is-not-fixed"));
+        else
+            await expect.ToHaveClassAsync(new Regex("is-not-fixed"));
     }
 
     private static decimal ParseDecimal(string? text)
@@ -106,6 +122,7 @@ public class WeekCardComponent
         public string Id { get; init; } = "";
         public decimal Amount { get; init; }
         public string NameOtherParty { get; init; } = "";
+        public string Date { get; init; } = "";
         public bool HasToggle { get; init; }
     }
 }

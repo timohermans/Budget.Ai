@@ -53,12 +53,8 @@
 
 ## 8. Toggle Fixed Tests (ToggleFixedTests.cs)
 
-- [x] 8.1 Test: `Toggle_VariableToFixed_UpdatesTransactionDisplay`
-- [x] 8.2 Test: `Toggle_FixedToVariable_UpdatesTransactionDisplay`
-- [x] 8.3 Test: `Toggle_UpdatesSpentTotal_OobSwap`
-- [x] 8.4 Test: `Toggle_UpdatesLeftTotal_OobSwap`
-- [x] 8.5 Test: `Toggle_UpdatesProgressBar_OobSwap`
-- [x] 8.6 Test: `Toggle_MultipleClicks_WorksRepeatedly`
+- [x] 8.1 Test: `Toggle_FixedToVariable_UpdatesWeekCardAndBudgetTotals`
+- [x] 8.2 Test: `Toggle_VariableToFixed_UpdatesWeekCardAndBudgetTotals`
 
 ## 9. Budget Calculation Tests (BudgetCalculationTests.cs)
 

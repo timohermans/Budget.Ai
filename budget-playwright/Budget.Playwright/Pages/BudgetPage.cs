@@ -1,3 +1,4 @@
+using System.Globalization;
 using Budget.Playwright.Support;
 using Microsoft.Playwright;
 
@@ -15,25 +16,21 @@ public class BudgetPage
     public async Task GotoAsync()
     {
         await _page.GotoAsync(Routes.Budget());
-        await _page.WaitForLoadStateAsync(LoadState.NetworkIdle);
     }
 
     public async Task GotoAsync(int year, int month)
     {
         await _page.GotoAsync(Routes.Budget(year, month));
-        await _page.WaitForLoadStateAsync(LoadState.NetworkIdle);
     }
 
     public async Task GotoAsync(int year, int month, int week)
     {
         await _page.GotoAsync(Routes.Budget(year, month, week));
-        await _page.WaitForLoadStateAsync(LoadState.NetworkIdle);
     }
 
     public async Task GotoAsync(int year, int month, string iban)
     {
         await _page.GotoAsync(Routes.Budget(year, month, iban));
-        await _page.WaitForLoadStateAsync(LoadState.NetworkIdle);
     }
 
     public async Task<string> GetMonthDisplayAsync()
@@ -79,26 +76,29 @@ public class BudgetPage
         return _page.Url;
     }
 
-    public async Task ClickPreviousMonthAsync()
+    public async Task ClickPreviousMonthAsync(DateOnly expectedMonth)
     {
-        var oldUrl = _page.Url;
         await _page.GetByTestId("nav-previous").ClickAsync();
-        await _page.WaitForFunctionAsync("oldUrl => window.location.href !== oldUrl", oldUrl);
-        await _page.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
+        await ExpectMonthAsync(expectedMonth);
     }
 
-    public async Task ClickNextMonthAsync()
+    public async Task ClickNextMonthAsync(DateOnly expectedMonth)
     {
-        var oldUrl = _page.Url;
         await _page.GetByTestId("nav-next").ClickAsync();
-        await _page.WaitForFunctionAsync("oldUrl => window.location.href !== oldUrl", oldUrl);
-        await _page.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
+        await ExpectMonthAsync(expectedMonth);
     }
 
-    public async Task ClickCurrentMonthAsync()
+    public async Task ClickCurrentMonthAsync(DateOnly expectedMonth)
     {
         await _page.GetByTestId("nav-today").ClickAsync();
-        await _page.GetByTestId("month-display").WaitForAsync(new() { State = WaitForSelectorState.Visible });
+        await ExpectMonthAsync(expectedMonth);
+    }
+
+    private async Task ExpectMonthAsync(DateOnly expectedMonth)
+    {
+        var expected = expectedMonth.ToString("MMMM", CultureInfo.InvariantCulture);
+        await Assertions.Expect(_page.GetByTestId("month-display"))
+            .ToContainTextAsync(expected, new() { Timeout = 30_000 });
     }
 
     public WeekCardComponent WeekCard(int weekNumber)
@@ -127,7 +127,7 @@ public class BudgetPage
     public async Task<IbanBalanceInfo> ClickIbanAsync(string iban)
     {
         await _page.GetByTestId($"iban-{iban}-summary").ClickAsync();
-        await _page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+        await _page.WaitForURLAsync("**/" + iban);
         return new IbanBalanceInfo { Iban = iban };
     }
 

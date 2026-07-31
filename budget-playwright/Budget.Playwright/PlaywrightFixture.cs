@@ -24,7 +24,7 @@ public class PlaywrightFixture : IAsyncDisposable
             _playwright = await Microsoft.Playwright.Playwright.CreateAsync();
             _browser = await _playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
             {
-                Headless = true,
+                Headless = false,
             });
             _initialized = true;
         }
