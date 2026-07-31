@@ -32,7 +32,7 @@ class Transaction(models.Model):
             )
         ]
 
-    def is_fixed(self, my_ibans: list[str]) -> bool:  # TODO: unit test
+    def is_fixed(self, my_ibans: list[str]) -> bool:
         if self.is_not_fixed:
             return False
         if self.is_income() and self.is_from_own_account(my_ibans):

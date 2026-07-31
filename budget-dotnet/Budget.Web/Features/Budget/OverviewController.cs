@@ -30,8 +30,8 @@ public class OverviewController(BudgetDbContext db) : Controller
         if (month == 0)
             month = today.Month;
 
-        var isIban = weekOrIban is not null && !int.TryParse(weekOrIban, out _); // TODO: remove double int.Parse?
-        var week = isIban || weekOrIban is null ? 0 : int.Parse(weekOrIban);
+        var week = 0;
+        var isIban = weekOrIban is not null && !int.TryParse(weekOrIban, out week);
         var iban = isIban ? weekOrIban : null;
 
         var userId = User.GetUserId();

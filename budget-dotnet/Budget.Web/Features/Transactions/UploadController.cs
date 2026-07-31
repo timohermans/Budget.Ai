@@ -12,7 +12,6 @@ public class UploadController(RabobankCsvImporter importer) : Controller
     /// <param name="file">The uploaded CSV file.</param>
     /// <param name="ct">A token to cancel the operation.</param>
     [HttpPost("upload")]
-    [TestModeAwareValidateAntiforgeryToken]
     public async Task<IActionResult> Index(IFormFile? file, CancellationToken ct)
     {
         if (file is null)

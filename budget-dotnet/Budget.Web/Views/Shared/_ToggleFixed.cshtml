@@ -26,5 +26,5 @@
     <small id="left-total" data-testid="left-total" hx-swap-oob="true">@Model.Left.Value.ToString("0.00")</small>
     <small id="spent-week-@Model.WeekNumber" data-testid="spent-week-@Model.WeekNumber" hx-swap-oob="true">@Model.WeekSpent.Value.ToString("0.00")</small>
     <b id="left-week-@Model.WeekNumber" data-testid="left-week-@Model.WeekNumber" hx-swap-oob="true">@Model.WeekLeft.Value.ToString("0.00")</b>
-    <progress id="progress-week-@Model.WeekNumber" data-testid="progress-week-@Model.WeekNumber" class="@(Model.WeekSpent > Model.WeekBudget ? "negative" : "")" value="@Model.WeekSpent.Value.ToString(System.Globalization.CultureInfo.InvariantCulture)" max="@Model.WeekBudget.Value.ToString(System.Globalization.CultureInfo.InvariantCulture)" hx-swap-oob="true"></progress>
+    <progress id="progress-week-@Model.WeekNumber" data-testid="progress-week-@Model.WeekNumber" class="@(Model.WeekSpent > Model.WeekBudget ? "negative" : "")" value="@Model.WeekSpent.Value.ToString()" max="@Model.WeekBudget.Value.ToString()" hx-swap-oob="true"></progress>
 }

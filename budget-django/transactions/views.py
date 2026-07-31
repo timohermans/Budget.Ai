@@ -1,4 +1,5 @@
 import datetime
+import logging
 from typing import cast
 
 from django.core.files.uploadedfile import UploadedFile
@@ -10,6 +11,8 @@ from django.views.decorators.http import require_POST
 
 from .models import Transaction
 from user.type import User
+
+logger = logging.getLogger(__name__)
 
 
 @require_POST
@@ -56,12 +59,14 @@ class TransactionUploadView(View):
 
         try:
             date = Transaction.objects.process_file(cast(UploadedFile, file), user)
-            # TODO: logging!
+            logger.info(
+                "Imported transactions from %s, most recent on %s", file.name, date
+            )
             return redirect(
                 reverse("budget:home", kwargs={"year": date.year, "month": date.month})
             )
-        except Exception as e:
-            # TODO: logging!
+        except Exception:
+            logger.exception("Failed to import transactions from %s", file.name)
             return render(
                 request,
                 "transactions/upload/error.html",

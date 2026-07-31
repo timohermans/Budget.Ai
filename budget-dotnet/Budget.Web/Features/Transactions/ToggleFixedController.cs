@@ -18,7 +18,6 @@ public class ToggleFixedController(BudgetDbContext db) : Controller
     /// <param name="id">The id of the transaction to toggle.</param>
     /// <param name="ct">A token to cancel the operation.</param>
     [HttpPost("toggle-fixed")]
-    [TestModeAwareValidateAntiforgeryToken] // TODO: Does this attribute need to be used here?
     public async Task<IActionResult> Index(int id, CancellationToken ct)
     {
         var userId = User.GetUserId();
