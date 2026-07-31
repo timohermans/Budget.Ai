@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="src/Budget.Web/Budget.Web.csproj" />
+  <Project Path="tests/Budget.Tests/Budget.Tests.csproj" />
+  <Project Path="tests/Budget.E2e/Budget.E2e.csproj" />
+</Solution>

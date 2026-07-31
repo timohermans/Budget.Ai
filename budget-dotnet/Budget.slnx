@@ -1,4 +1,0 @@
-<Solution>
-  <Project Path="Budget.Tests/Budget.Tests.csproj" />
-  <Project Path="Budget.Web/Budget.Web.csproj" />
-</Solution>

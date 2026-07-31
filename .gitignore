@@ -405,6 +405,10 @@ FodyWeavers.xsd
 # JetBrains Rider
 *.sln.iml
 .idea/
+*.sln.DotSettings.user
+
+# Playwright browser binaries
+playwright-browsers/
 
 ##
 ## Visual studio for Mac
