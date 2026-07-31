@@ -3,7 +3,7 @@ namespace Budget.Playwright.Support;
 public static class Routes
 {
     public static string BaseUrl { get; set; } =
-        Environment.GetEnvironmentVariable("PLAYWRIGHT_BASE_URL") ?? "http://localhost:8000";
+        Environment.GetEnvironmentVariable("PLAYWRIGHT_BASE_URL") ?? "http://localhost:5080";
 
     public static string Budget() => $"{BaseUrl}/budget/";
     public static string Budget(int year, int month) => $"{BaseUrl}/budget/{year}/{month}";

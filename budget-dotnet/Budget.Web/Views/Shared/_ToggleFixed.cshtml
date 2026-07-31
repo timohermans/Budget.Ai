@@ -1,0 +1,30 @@
+@model Budget.Web.Domain.Transactions.ToggleFixedPartialModel
+
+<form
+      id="toggle-@Model.Transaction.Id"
+      data-testid="toggle-@Model.Transaction.Id"
+      hx-target="this"
+      hx-swap="outerHTML"
+      hx-post="/transactions/toggle-fixed">
+    @Html.AntiForgeryToken()
+
+    <input type="hidden" name="id" value="@Model.Transaction.Id" />
+    <input type="hidden" name="iban" value="" />
+    <input type="hidden" name="week" value="@Model.WeekNumber" />
+
+    <button
+        type="submit"
+        data-testid="toggle-submit"
+        class="outline smaller @(Model.Transaction.IsNotFixed ? "is-not-fixed" : "")">
+        vast
+    </button>
+</form>
+
+@if (Model is { Spent: not null, Left: not null, WeekNumber: not null, WeekSpent: not null, WeekLeft: not null, WeekBudget: not null })
+{
+    <h2 id="spent-total" data-testid="spent-total" hx-swap-oob="true">@Model.Spent.Value.ToString("0.00")</h2>
+    <small id="left-total" data-testid="left-total" hx-swap-oob="true">@Model.Left.Value.ToString("0.00")</small>
+    <small id="spent-week-@Model.WeekNumber" data-testid="spent-week-@Model.WeekNumber" hx-swap-oob="true">@Model.WeekSpent.Value.ToString("0.00")</small>
+    <b id="left-week-@Model.WeekNumber" data-testid="left-week-@Model.WeekNumber" hx-swap-oob="true">@Model.WeekLeft.Value.ToString("0.00")</b>
+    <progress id="progress-week-@Model.WeekNumber" data-testid="progress-week-@Model.WeekNumber" class="@(Model.WeekSpent > Model.WeekBudget ? "negative" : "")" value="@Model.WeekSpent.Value.ToString(System.Globalization.CultureInfo.InvariantCulture)" max="@Model.WeekBudget.Value.ToString(System.Globalization.CultureInfo.InvariantCulture)" hx-swap-oob="true"></progress>
+}

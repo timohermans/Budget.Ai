@@ -1,0 +1,317 @@
+@model Budget.Web.Features.Budget.OverviewViewModel
+
+<section class="row justify-content-center">
+  <h1 class="col-12 col-md-4">Overzicht</h1>
+  <div class="col-6 col-md-4" x-data>
+    <form
+      action="/transactions/upload"
+      method="POST"
+      enctype="multipart/form-data"
+      hx-boost
+      hx-indicator=".spinning"
+      hx-on::after-request="this.reset()"
+    >
+      @Html.AntiForgeryToken()
+      <input
+        type="file"
+        name="file"
+        data-testid="file-input"
+        style="display: none"
+        x-ref="file"
+        @@change="$refs.submit.click()"
+      />
+
+      <input type="submit" x-ref="submit" style="display: none" />
+
+      <button
+        type="button"
+        class="secondary d-flex align-items-center"
+        @@click="$refs.file.click()"
+      >
+        <i data-lucide="loader" class="spinning htmx-indicator"></i>
+        <i class="htmx-not-indicator" data-lucide="file-up"></i>
+        <span>Voeg toe</span>
+      </button>
+    </form>
+  </div>
+
+  <div class="col-6 col-md-4" data-testid="nav-container" hx-boost="true">
+    <a class="outline secondary" role="button" href="/budget/@Model.DatePrevious.Year/@Model.DatePrevious.Month" data-testid="nav-previous"><i data-lucide="arrow-left" width="16" height="16"></i></a>
+    <a role="button" class="outline secondary" data-testid="nav-today" href="/budget/">nu</a>
+    <a class="outline secondary" role="button" href="/budget/@Model.DateNext.Year/@Model.DateNext.Month" data-testid="nav-next">
+      <i data-lucide="arrow-right" width="16" height="16"></i>
+    </a>
+  </div>
+</section>
+
+<section id="overview">
+  <style>
+    .stats {
+        display: flex;
+
+        @@media screen and (max-width: 578px) {
+          flex-direction: column;
+
+          > *:not(:first-child)  {
+              padding-top: calc(var(--pico-spacing));
+          }
+
+          > *:not(:last-child) {
+              padding-bottom: calc(var(--pico-spacing));
+              border-bottom: 1px dashed black;
+          }
+        }
+
+        @@media screen and (min-width: 579px) {
+          > * {
+              display: flex;
+              flex-direction: column;
+          }
+
+          > *:not(:first-child)  {
+              padding-left: calc(var(--pico-spacing) * 2);
+          }
+
+          > *:not(:last-child) {
+              padding-right: calc(var(--pico-spacing) * 2);
+              border-right: 1px dashed black;
+          }
+        }
+
+
+        h2 {
+            margin: calc(var(--pico-spacing) / 4) 0;
+        }
+
+        small {
+            color: var(--pico-muted-color);
+        }
+    }
+
+    .collapsible-list {
+      max-width: 800px;
+      margin: 0 auto;
+
+      section, h5 {
+        margin: 0;
+      }
+
+      small {
+          color: var(--pico-muted-color);
+      }
+    }
+
+    .summary {
+      align-items: center;
+      background: var(--pico-card-background-color);
+      display: flex;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+    }
+
+    .summary > * {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: calc(var(--pico-spacing) / 2);
+
+      &:not(:first-child) {
+        flex-basis: 150px;
+      }
+    }
+
+    .summary > * > div {
+      display: flex;
+      align-items: center;
+      gap: calc(var(--pico-spacing) / 4);
+    }
+
+    progress {
+      margin:  0;
+      min-width: 100px;
+    }
+
+    .transaction {
+      display: flex;
+      gap: var(--pico-spacing);
+      margin-top: var(--pico-spacing);
+
+      .date {
+        text-wrap: nowrap;
+      }
+
+      > * {
+        display: flex;
+        flex-direction: column;
+
+        &:first-child {
+          justify-content: space-between;
+        }
+      }
+
+      .amount {
+        border: 1px solid black;
+        border-radius: var(--pico-border-radius);
+        padding: calc(var(--pico-spacing) / 5) calc(var(--pico-spacing) / 2);
+      }
+
+      &.positive {
+        .amount { color: var(--success); border-color: var(--success); }
+      }
+
+      &.negative {
+        .amount { color: var(--error); border-color: var(--error); }
+      }
+
+
+      button:not(.is-not-fixed):hover,
+      .is-not-fixed {
+        text-decoration: line-through;
+        border-color: #25DDDD;
+        color: #25DDDD;
+      }
+    }
+  </style>
+
+  <div class="d-flex justify-content-center">
+    <article class="stats">
+      <div>
+        <small>Deze maand</small>
+        <h2 data-testid="month-display">@Model.MonthDisplay</h2>
+        <small>@Model.MonthStart - @Model.MonthEnd</small>
+      </div>
+      <div>
+        <small>Budget</small>
+        <h2 data-testid="budget-value">@Model.Summary.Budget.ToString(System.Globalization.CultureInfo.InvariantCulture)</h2>  <!-- TODO: Can we do something about all these InvariantCulture bloat? -->
+        <small><span data-testid="income-value">@Model.Summary.Income.ToString(System.Globalization.CultureInfo.InvariantCulture)</span> - <span data-testid="expenses-value">@Model.Summary.Expenses.ToString(System.Globalization.CultureInfo.InvariantCulture)</span></small>
+      </div>
+      <div>
+        <small>Uitgegeven</small>
+        <h2 id="spent-total" data-testid="spent-total">@Model.Summary.Spent.ToString(System.Globalization.CultureInfo.InvariantCulture)</h2>
+        <small id="left-total" data-testid="left-total">@Model.Summary.Left.ToString(System.Globalization.CultureInfo.InvariantCulture) over</small>
+      </div>
+    </article>
+  </div>
+
+  <section class="collapsible-list">
+    <h4><i>Budget per week</i></h4>
+    @foreach (var (weekNumber, weekSummary) in Model.Summary.Weeks)
+    {
+        var isExpanded = weekNumber == Model.Week;
+        <article>
+          <div
+            id="week-@weekNumber"
+            data-testid="week-@weekNumber"
+            class="details"
+            >
+            <div
+              class="summary"
+              data-testid="week-@weekNumber-summary"
+              hx-get="@(isExpanded ? $"/budget/{Model.Year}/{Model.Month}" : $"/budget/{Model.Year}/{Model.Month}/{weekNumber}")"
+              hx-swap="@(isExpanded ? "show:top" : $"show:#week-{weekNumber}:top")"
+              hx-target="body"
+              hx-push-url="true"
+            >
+              <section>
+                <small>Week</small>
+                <h5>@weekNumber</h5>
+              </section>
+              <section>
+                <small>Over</small>
+                <b id="left-week-@weekNumber" data-testid="left-week-@weekNumber">@weekSummary.Left.ToString("0.00")</b>
+              </section>
+              <section>
+                <small>Uitgegeven</small>
+                <div>
+                  <small id="spent-week-@weekNumber" data-testid="spent-week-@weekNumber">@weekSummary.Spent.ToString("0.00")</small>
+                  <progress id="progress-week-@weekNumber" data-testid="progress-week-@weekNumber" class="@(weekSummary.Spent > weekSummary.Budget ? "negative" : "")" value="@weekSummary.Spent.ToString(System.Globalization.CultureInfo.InvariantCulture)" max="@weekSummary.Budget.ToString(System.Globalization.CultureInfo.InvariantCulture)"></progress>
+                  <small data-testid="budget-week-@weekNumber">@weekSummary.Budget.ToString("0.00")</small>
+                </div>
+              </section>
+            </div>
+            @if (isExpanded)
+            {
+              <div data-testid="week-@weekNumber-transactions">
+                @foreach (var transaction in weekSummary.Transactions)
+                {
+                  <div id="transaction-@transaction.Id" data-testid="transaction" class="transaction @(transaction.Amount > 0 ? "positive" : "negative")">
+                    <div>
+                      <b class="date" data-testid="date">@transaction.Date.ToString("dd-MM")</b>
+                      <div>
+                        @if (transaction.IsFixed || transaction.IsNotFixed)
+                        {
+                          @await Html.PartialAsync("_ToggleFixed", new ToggleFixedPartialModel(transaction))
+                        }
+                      </div>
+                    </div>
+                    <div>
+                      <div><span class="amount" data-testid="amount">@transaction.Amount.ToString("0.00")</span></div>
+                      <i data-testid="name-other-party">@transaction.NameOtherParty</i>
+                      <small>@transaction.Description</small>
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        </article>
+    }
+  </section>
+
+  <section class="collapsible-list">
+    <h4><i>Balans per rekening</i></h4>
+    @foreach (var (iban, ibanBalance) in Model.Summary.IbanBalances)
+    {
+        var isExpanded = iban == Model.Iban;
+        <article>
+          <div
+            id="iban-@iban"
+            data-testid="iban-section"
+            class="details"
+            >
+            <div class="summary"
+              data-testid="iban-@iban-summary"
+              hx-get="@(isExpanded ? $"/budget/{Model.Year}/{Model.Month}" : $"/budget/{Model.Year}/{Model.Month}/{iban}")"
+              hx-swap="@(isExpanded ? "show:top" : $"show:#iban-{iban}:top")"
+              hx-target="body"
+              hx-push-url="true"
+            >
+              <section>
+                <small>Iban</small>
+                <h5>@iban</h5>
+              </section>
+              <section>
+                <small>Balans</small>
+                <b data-testid="iban-balance">@ibanBalance.Balance.ToString("0.00")</b>
+              </section>
+            </div>
+            @if (isExpanded)
+            {
+              <div>
+                @foreach (var transaction in ibanBalance.Transactions)
+                {
+                  <div id="transaction-@transaction.Id" class="transaction @(transaction.Amount > 0 ? "positive" : "negative")">
+                    <div>
+                      <b class="date" data-testid="date">@transaction.Date.ToString("dd-MM")</b>
+                      <div>
+                        @if (transaction.IsFixed || transaction.IsNotFixed)
+                        {
+                          @await Html.PartialAsync("_ToggleFixed", new ToggleFixedPartialModel(transaction))
+                        }
+                      </div>
+                    </div>
+                    <div>
+                      <div><span class="amount">@transaction.Amount.ToString("0.00")</span></div>
+                      <i>@transaction.NameOtherParty</i>
+                      <small>@transaction.Description</small>
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        </article>
+    }
+  </section>
+</section>
