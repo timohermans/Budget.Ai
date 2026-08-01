@@ -1,0 +1,23 @@
+# Version control & secrets
+.git/
+.gitignore
+.env
+
+# Build output (keeps the build context small)
+**/bin/
+**/obj/
+**/TestResults/
+
+# Not needed for the web app build
+tests/
+openspec/
+.opencode/
+.vscode/
+.idea/
+*.md
+*.mdx
+
+# Tooling / OS noise
+.DS_Store
+docker-compose*.yml
+docker-compose*.yaml
