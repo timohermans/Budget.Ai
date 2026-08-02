@@ -60,7 +60,7 @@ jobs:
 
       - name: Apply migrations
         env:
-          BUDGET_DB_CONNECTION: "Host=postgres;Port=5432;Database=budget;Username=budget;Password=budget"
+          ConnectionStrings__Budget: "Host=postgres;Port=5432;Database=budget;Username=budget;Password=budget"
         run: dotnet ef database update --project src/Budget.Web --no-build --configuration Release
 
       - name: Unit tests
