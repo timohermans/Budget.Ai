@@ -28,13 +28,13 @@ jobs:
       image: mcr.microsoft.com/playwright/dotnet:v1.61.0-noble
     services:
       postgres:
-        image: postgres:16-alpine
+        image: postgres:18-alpine
         env:
           POSTGRES_USER: budget
           POSTGRES_PASSWORD: budget
           POSTGRES_DB: budget
         options: >-
-          --health-cmd pg_isready -U budget
+          --health-cmd "pg_isready -U budget"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
