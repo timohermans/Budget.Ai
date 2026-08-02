@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Net;
 using Budget.Web.Data;
 using Budget.Web.Domain.Transactions;
 using Budget.Web.Infrastructure;
@@ -6,6 +7,7 @@ using dotenv.net;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 
@@ -19,7 +21,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews();
 
 var connection = builder.Configuration.GetConnectionString("Budget")
-    ?? Environment.GetEnvironmentVariable("BUDGET_DB_CONNECTION")
+    ?? Environment.GetEnvironmentVariable("BUDGET_DB_CONNECTION") // TODO: Deze kan eigenlijk weg
     ?? "Host=localhost;Database=budget;Username=budget;Password=budget";
 
 builder.Services.AddDbContext<BudgetDbContext>(options =>
@@ -57,6 +59,11 @@ else
         .AddCookie(options => options.ExpireTimeSpan = TimeSpan.FromHours(8));
 }
 
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+});
+
 builder.Services.AddAuthorization(options =>
 {
     options.FallbackPolicy = new AuthorizationPolicyBuilder()
@@ -65,6 +72,8 @@ builder.Services.AddAuthorization(options =>
 });
 
 var app = builder.Build();
+
+app.UseForwardedHeaders();
 
 app.UseAuthentication();
 
