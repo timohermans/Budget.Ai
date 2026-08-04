@@ -239,6 +239,7 @@ public class MerchantsControllerTests
             db.Merchants.Add(new Merchant
             {
                 NameNormalized = $"shop{i:D2}",
+                DisplayName = $"Shop {i:D2}",
                 Status = i % 2 == 0 ? MerchantStatus.Mapped : MerchantStatus.None,
                 UpdatedAt = baseTime.AddMinutes(i),
             });
@@ -264,12 +265,14 @@ public class MerchantsControllerTests
         var recentlyMapped = new Merchant
         {
             NameNormalized = "hema",
+            DisplayName = "HEMA",
             Status = MerchantStatus.Mapped,
             UpdatedAt = baseTime.AddMinutes(9),
         };
         var recentlyAliased = new Merchant
         {
             NameNormalized = "albert heijn",
+            DisplayName = "Albert Heijn",
             Status = MerchantStatus.Mapped,
             UpdatedAt = baseTime.AddMinutes(1),
         };

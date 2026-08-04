@@ -99,7 +99,7 @@ public static class MerchantListQuery
                 LastLinked = m.Aliases.Select(a => (DateTimeOffset?)a.CreatedAt).Max(),
                 Aliases = m.Aliases.Select(a => a.NameNormalized)
             })
-            .Where(m => query == null || m.DisplayName == null || m.DisplayName.ToLower().Contains(query))
+            .Where(m => query == null || m.DisplayName.ToLower().Contains(query))
             .ToListAsync();
         
         var transactionsByName = await db

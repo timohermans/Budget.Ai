@@ -19,7 +19,7 @@ public class MerchantsMapController(BudgetDbContext db) : Controller
 
         if (key.Length > 0 && validLogoUrl)
         {
-            displayName = string.IsNullOrWhiteSpace(displayName) ? null : displayName.Trim();
+            displayName = string.IsNullOrWhiteSpace(displayName) ? name : displayName.Trim();
 
             var merchant = await db.Merchants.SingleOrDefaultAsync(m => m.NameNormalized == key, ct);
             if (merchant is null)
