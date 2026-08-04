@@ -12,6 +12,7 @@ public static class MerchantListQuery
     {
         var transactionsQuery = 
         from t in db.Transactions
+        where !string.IsNullOrWhiteSpace(t.NameOtherPartyNormalized)
         join m in db.Merchants on t.NameOtherPartyNormalized equals m.NameNormalized into mj // this one is necessary when not linked manually but found naturally
         from m in mj.DefaultIfEmpty()
         join a in db.MerchantAliases on t.NameOtherPartyNormalized equals a.NameNormalized into aj
