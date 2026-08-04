@@ -47,6 +47,7 @@ public class ToggleFixedController(BudgetDbContext db) : Controller
             .Where(t => t.UserId == userId && t.Date >= lastMonth && t.Date < nextMonth)
             .OrderByDescending(t => t.Date)
             .ThenByDescending(t => t.NameOtherParty)
+            .Select(t => new TransactionOverviewQueryResult(t, null, null))
             .ToListAsync(ct);
 
         var summary = SummaryCalculator.Calculate(date.Year, date.Month, null, window, ownIbans);

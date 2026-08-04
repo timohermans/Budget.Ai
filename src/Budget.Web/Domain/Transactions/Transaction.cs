@@ -9,6 +9,7 @@ public class Transaction
     public decimal Amount { get; set; }
     public DateOnly Date { get; set; }
     public string NameOtherParty { get; set; } = string.Empty;
+    public string NameOtherPartyNormalized { get; set; } = string.Empty;
     public string IbanOtherParty { get; set; } = string.Empty;
     public string? Description { get; set; }
     public bool IsNotFixed { get; set; }

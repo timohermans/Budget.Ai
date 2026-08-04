@@ -1,4 +1,5 @@
 using System.Globalization;
+using Budget.Web.Domain.Merchants;
 
 namespace Budget.Web.Domain.Transactions;
 
@@ -18,7 +19,7 @@ public static class SummaryCalculator
         int year,
         int month,
         string? iban,
-        IReadOnlyCollection<Transaction> transactions,
+        IReadOnlyCollection<TransactionOverviewQueryResult> transactions,
         IReadOnlyList<string> ownIbans)
     {
         var thisMonth = new DateOnly(year, month, 1);
@@ -27,9 +28,9 @@ public static class SummaryCalculator
         var daysInMonth = DateTime.DaysInMonth(year, month);
 
         var window = transactions
-            .Where(t => t.Date >= lastMonth && t.Date < nextMonth)
-            .OrderByDescending(t => t.Date)
-            .ThenByDescending(t => t.NameOtherParty)
+            .Where(t => t.Transaction.Date >= lastMonth && t.Transaction.Date < nextMonth)
+            .OrderByDescending(t => t.Transaction.Date)
+            .ThenByDescending(t => t.DisplayName ?? t.Transaction.NameOtherParty)
             .ToList();
 
         if (ownIbans.Count == 0)
@@ -53,8 +54,9 @@ public static class SummaryCalculator
         foreach (var week in weeks.Values)
             summary.Weeks[week.WeekNumber] = week;
 
-        foreach (var transaction in window)
+        foreach (var transactionResult in window)
         {
+            var transaction = transactionResult.Transaction;
             var template = new TransactionTemplateModel(
                 transaction.Id,
                 transaction.Amount,
@@ -62,7 +64,9 @@ public static class SummaryCalculator
                 TransactionClassifier.IsFixed(transaction, ownIbans),
                 transaction.IsNotFixed,
                 transaction.NameOtherParty,
-                transaction.Description);
+                transaction.Description,
+                transactionResult?.LogoUrl,
+                transactionResult?.DisplayName);
 
             var isLastMonth = transaction.Date.Year == lastMonth.Year
                 && transaction.Date.Month == lastMonth.Month;

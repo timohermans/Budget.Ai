@@ -209,7 +209,7 @@ public class SummaryCalculatorTests
             Transaction(12, 1000m, new DateOnly(2026, 1, 11), "bc", "Betaalrekening", "OWNED02", "OWNED01"),
             Transaction(13, 500m, new DateOnly(2026, 1, 11), "tb", "Spaar", "OWNED01", "OWNED02"),
             Transaction(14, -500m, new DateOnly(2026, 1, 11), "bc", "Betaalrekening", "OWNED02", "OWNED01"),
-        };
+        }.Select(t => new TransactionOverviewQueryResult(t, null, null)).ToList();
 
         var summary = SummaryCalculator.Calculate(
             2026, 1, null,
@@ -231,7 +231,7 @@ public class SummaryCalculatorTests
             .Select(g => g.Key)
             .ToList();
 
-        return SummaryCalculator.Calculate(Year, Month, selectedIban, transactions, ownIbans);
+        return SummaryCalculator.Calculate(Year, Month, selectedIban, transactions.Select(t => new TransactionOverviewQueryResult(t, null, null)).ToList(), ownIbans);
     }
 
     private static Transaction Transaction(

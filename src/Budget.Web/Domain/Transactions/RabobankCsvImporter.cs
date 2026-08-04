@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Text;
 using Budget.Web.Data;
+using Budget.Web.Domain.Merchants;
 using Microsoft.EntityFrameworkCore;
 
 namespace Budget.Web.Domain.Transactions;
@@ -71,6 +72,7 @@ public sealed class RabobankCsvImporter(BudgetDbContext db)
                 Iban = get("IBAN/BBAN"),
                 IbanOtherParty = get("Tegenrekening IBAN/BBAN"),
                 NameOtherParty = get("Naam tegenpartij"),
+                NameOtherPartyNormalized = MerchantNameNormalizer.Normalize(get("Naam tegenpartij")),
             });
         }
 

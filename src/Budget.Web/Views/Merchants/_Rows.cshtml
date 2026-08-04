@@ -1,0 +1,98 @@
+@model Budget.Web.Features.Merchants.RowsPartialModel
+@using Budget.Web.Domain.Merchants
+@using Budget.Web.Features.Merchants
+
+<tbody id="merchant-rows" data-testid="merchant-rows">
+  @if (Model.Rows.Count == 0)
+  {
+    <tr>
+      <td colspan="5" data-testid="merchant-empty">Geen tegenpartijen gevonden.</td>
+    </tr>
+  }
+  @foreach (var row in Model.Rows)
+  {
+    var name = row.NameNormalized;
+    <tr data-testid="merchant-row" data-merchant-name="@name">
+      <td>
+        <span data-testid="merchant-name">@row.RawName</span>
+      </td>
+      <td data-testid="merchant-txn">@row.TransactionCount</td>
+      <td data-testid="merchant-first-seen">@row.FirstSeen.ToString("dd-MM-yyyy")</td>
+      <td>
+        @if (row.IsLinked)
+        {
+          <span data-testid="merchant-status">linked to @row.LinkedToName</span>
+        }
+        else if (row.Status is null)
+        {
+          <span data-testid="merchant-status">unmapped</span>
+        }
+        else if (row.Status == MerchantStatus.None)
+        {
+          <span data-testid="merchant-status">no-logo</span>
+        }
+        else
+        {
+          <span data-testid="merchant-status">mapped</span>
+        }
+      </td>
+      <td>
+        @if (row.IsLinked)
+        {
+          <form method="post" hx-post="/merchants/clear" hx-target="#merchant-rows" hx-swap="outerHTML">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="name" value="@name" />
+            <input type="hidden" name="search" value="@Model.Search" />
+            <input type="hidden" name="sort" value="@Model.Sort" />
+            <input type="hidden" name="dir" value="@Model.Dir" />
+            <button type="submit" data-testid="merchant-clear-submit" class="outline smaller">clear</button>
+          </form>
+        }
+        else if (row.Status is null)
+        {
+          <details data-testid="merchant-map">
+            <summary>map</summary>
+            <form method="post" hx-post="/merchants/map" hx-target="#merchant-rows" hx-swap="outerHTML">
+              @Html.AntiForgeryToken()
+              <input type="hidden" name="name" value="@name" />
+              <input type="text" name="displayName" data-testid="merchant-display-name" placeholder="Weergavenaam" value="@row.RawName" />
+              <input type="url" name="logoUrl" data-testid="merchant-logo-url" placeholder="Logo URL" />
+              <input type="hidden" name="search" value="@Model.Search" />
+              <input type="hidden" name="sort" value="@Model.Sort" />
+              <input type="hidden" name="dir" value="@Model.Dir" />
+              <button type="submit" data-testid="merchant-map-submit" class="smaller">map</button>
+            </form>
+          </details>
+          <details data-testid="merchant-link">
+            <summary>link to merchant</summary>
+            @await Html.PartialAsync("~/Views/Merchants/_Options.cshtml", new OptionsPartialModel { Name = name, Q = "", Search = Model.Search, Sort = Model.Sort, Dir = Model.Dir, Options = Model.RecentOptions })
+          </details>
+        }
+        else
+        {
+          <details data-testid="merchant-edit">
+            <summary>edit</summary>
+            <form method="post" hx-post="/merchants/map" hx-target="#merchant-rows" hx-swap="outerHTML">
+              @Html.AntiForgeryToken()
+              <input type="hidden" name="name" value="@name" />
+              <input type="text" name="displayName" data-testid="merchant-display-name" placeholder="Weergavenaam" value="@(row.DisplayName ?? row.RawName)" />
+              <input type="url" name="logoUrl" data-testid="merchant-logo-url" placeholder="Logo URL" value="@(row.LogoUrl ?? "")" />
+              <input type="hidden" name="search" value="@Model.Search" />
+              <input type="hidden" name="sort" value="@Model.Sort" />
+              <input type="hidden" name="dir" value="@Model.Dir" />
+              <button type="submit" data-testid="merchant-map-submit" class="smaller">save</button>
+            </form>
+            <form method="post" hx-post="/merchants/clear" hx-target="#merchant-rows" hx-swap="outerHTML">
+              @Html.AntiForgeryToken()
+              <input type="hidden" name="name" value="@name" />
+              <input type="hidden" name="search" value="@Model.Search" />
+              <input type="hidden" name="sort" value="@Model.Sort" />
+              <input type="hidden" name="dir" value="@Model.Dir" />
+              <button type="submit" data-testid="merchant-clear-submit" class="outline smaller">clear</button>
+            </form>
+          </details>
+        }
+      </td>
+    </tr>
+  }
+</tbody>

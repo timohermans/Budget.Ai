@@ -73,6 +73,8 @@ public class WeekCardComponent
             var idAttr = await row.GetAttributeAsync("id");
             var id = idAttr?.Replace("transaction-", "") ?? "";
             var toggleButton = row.GetByTestId("toggle-submit");
+            var logoImage = row.GetByTestId("transaction-logo-image");
+            var logoPlaceholder = row.GetByTestId("transaction-logo-placeholder");
 
             result.Add(new TransactionInfo
             {
@@ -81,6 +83,8 @@ public class WeekCardComponent
                 NameOtherParty = name?.Trim() ?? "",
                 Date = dateText?.Trim() ?? "",
                 HasToggle = await toggleButton.IsVisibleAsync(),
+                HasLogoImage = await logoImage.IsVisibleAsync(),
+                HasLogoPlaceholder = await logoPlaceholder.IsVisibleAsync(),
             });
         }
         return result;
@@ -124,5 +128,7 @@ public class WeekCardComponent
         public string NameOtherParty { get; init; } = "";
         public string Date { get; init; } = "";
         public bool HasToggle { get; init; }
+        public bool HasLogoImage { get; init; }
+        public bool HasLogoPlaceholder { get; init; }
     }
 }

@@ -4,6 +4,7 @@ using Budget.E2e.Support;
 namespace Budget.E2e.Tests;
 
 [TestClass]
+[TestCategory("E2E")]
 public class DashboardTests : PlaywrightTestBase
 {
     [TestMethod]

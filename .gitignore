@@ -131,6 +131,9 @@ ipch/
 # Re-include the E2E test project, whose directory matches *.e2e case-insensitively
 !tests/Budget.E2e/
 
+# The Playwright e2e test project name collides with the trace-file pattern above
+!**/Budget.E2e/
+
 # TFS 2012 Local Workspace
 $tf/
 

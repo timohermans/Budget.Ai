@@ -30,7 +30,8 @@ Budget app, migrated from Django to .NET. ASP.NET Core MVC (net10.0) monolith in
 
 - Feature folders under `src/Budget.Web/Features/` (`Budget/`, `Transactions/`) hold controllers; domain logic in `src/Budget.Web/Domain/Transactions/` (`SummaryCalculator`, `TransactionClassifier`, `RabobankCsvImporter`); `Data/BudgetDbContext.cs` is the EF context
 - **Do not create repositories.** `BudgetDbContext` is the repository — inject it directly into controllers and query via EF Core
-- **Vertical slice style:** keep logic inside controllers and do not share logic between features. Always ask the user before sharing/extracting logic into a shared place
+- **Vertical slice style:** keep logic inside controllers and do not share logic between features. This also means not creating private methods when logic is not shared! Always ask the user before sharing/extracting logic into a shared place
+- **Every Controller method in a seperate file:** Keep every controller methode separate.
 - Views are MVC Razor with **htmx 2 + Alpine.js + Pico CSS + lucide icons loaded from CDN** (no bundling). Interactive rows (toggle-fixed, upcoming merchant admin) use `hx-post` + OOB swaps returning partials
 - E2E locators use `GetByTestId` — do not assert on CSS classes, so a redesign doesn't break tests
 - Rabobank CSV import: semicolon-delimited, latin-1 encoded; culture is forced to InvariantCulture in `Program.cs`

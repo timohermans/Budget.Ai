@@ -36,4 +36,6 @@ public sealed record TransactionTemplateModel(
     bool IsFixed,
     bool IsNotFixed,
     string NameOtherParty,
-    string? Description);
+    string? Description,
+    string? LogoUrl = null,
+    string? DisplayName = null);

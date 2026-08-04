@@ -1,0 +1,63 @@
+@model Budget.Web.Features.Merchants.OptionsPartialModel
+
+<div data-testid="merchant-options" data-row-name="@Model.Name">
+  <input type="hidden" name="name" value="@Model.Name" />
+  <input type="hidden" name="search" value="@Model.Search" />
+  <input type="hidden" name="sort" value="@Model.Sort" />
+  <input type="hidden" name="dir" value="@Model.Dir" />
+  <input
+    name="q"
+    type="search"
+    data-testid="merchant-options-search"
+    placeholder="Zoek merchant..."
+    value="@Model.Q"
+    hx-get="/merchants/options"
+    hx-trigger="input changed delay:300ms, search"
+    hx-include="closest [data-testid=merchant-options]"
+    hx-target="closest [data-testid=merchant-options]"
+    hx-swap="outerHTML"
+  />
+
+  @if (Model.Options.Count == 0)
+  {
+    if (!string.IsNullOrEmpty(Model.Q))
+    {
+      <div data-testid="merchant-options-empty">
+        <span>Geen match voor '@Model.Q' — maak een nieuwe merchant aan.</span>
+        <button
+          type="button"
+          data-testid="merchant-options-create"
+          class="smaller"
+          onclick="var d=this.closest('tr').querySelector('details[data-testid=merchant-map]'); if(d){d.open=true; d.scrollIntoView({block:'center'});}"
+        >
+          Nieuwe merchant
+        </button>
+      </div>
+    }
+    else
+    {
+      <span data-testid="merchant-options-empty">Nog geen merchants — map er eerst een aan.</span>
+    }
+  }
+  else
+  {
+    <ul data-testid="merchant-options-list">
+      @foreach (var option in Model.Options)
+      {
+        <li>
+          <form method="post" hx-post="/merchants/link" hx-target="#merchant-rows" hx-swap="outerHTML">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="name" value="@Model.Name" />
+            <input type="hidden" name="merchantName" value="@option.NameNormalized" />
+            <input type="hidden" name="search" value="@Model.Search" />
+            <input type="hidden" name="sort" value="@Model.Sort" />
+            <input type="hidden" name="dir" value="@Model.Dir" />
+            <button type="submit" data-testid="merchant-option" data-merchant="@option.NameNormalized" class="outline smaller">
+              @option.Label (@option.TotalTransactions)
+            </button>
+          </form>
+        </li>
+      }
+    </ul>
+  }
+</div>

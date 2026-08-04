@@ -42,6 +42,17 @@ public class RabobankCsvImporterTests
     }
 
     [TestMethod]
+    public void Parse_WhenNameGiven_ThenStoresNormalizedName()
+    {
+        var row = "\"OWNED1\",\"EUR\",\"RABONL2U\",\"000000000000000001\",\"2026-01-03\",\"2026-01-03\",\"-150,00\",\"\",\"THEIRS1\",\"AH- Jan Linders 4181\",\"\",\"\",\"\",\"bc\",\"\",\"\",\"\",\"\",\"\",\"Groceries\",\"\",\"\",\"\",\"\",\"\",\"\"";
+        using var stream = Stream(Header + "\n" + row);
+
+        var result = RabobankCsvImporter.Parse(stream, "user-1");
+
+        Assert.AreEqual("ah - jan linders 4181", result.Single().NameOtherPartyNormalized);
+    }
+
+    [TestMethod]
     public void Parse_WhenMultipleRows_ThenParsesEach()
     {
         var row1 = "\"OWNED1\",\"EUR\",\"RABONL2U\",\"000000000000000001\",\"2026-01-03\",\"2026-01-03\",\"-150,00\",\"\",\"THEIRS1\",\"Albert Heijn\",\"\",\"\",\"\",\"bc\",\"\",\"\",\"\",\"\",\"\",\"Groceries\",\"\",\"\",\"\",\"\",\"\",\"\"";

@@ -145,8 +145,38 @@
         display: flex;
         flex-direction: column;
 
-        &:first-child {
+        &.transaction-date {
           justify-content: space-between;
+        }
+      }
+
+      .transaction-logo {
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        overflow: hidden;
+        background: var(--pico-card-background-color);
+        border: 1px solid var(--pico-muted-border-color);
+        position: relative;
+        flex-shrink: 0;
+        align-self: center;
+
+        .logo-image {
+          position: absolute;
+          inset: 0;
+          width: 100%;
+          height: 100%;
+          object-fit: contain;
+          background: white;
+        }
+
+        .logo-placeholder {
+          position: absolute;
+          inset: 0;
+          margin: auto;
+          width: 55%;
+          height: 55%;
+          color: var(--pico-muted-color);
         }
       }
 
@@ -236,7 +266,18 @@
                 @foreach (var transaction in weekSummary.Transactions)
                 {
                   <div id="transaction-@transaction.Id" data-testid="transaction" class="transaction @(transaction.Amount > 0 ? "positive" : "negative")">
-                    <div>
+                    <div class="transaction-logo" data-testid="transaction-logo">
+                      @if (transaction.LogoUrl is not null)
+                      {
+                        <img class="logo-image" src="@transaction.LogoUrl" alt="" loading="lazy" data-testid="transaction-logo-image" />
+                        <i class="logo-placeholder hidden" data-testid="transaction-logo-placeholder" data-lucide="wallet"></i>
+                      }
+                      else
+                      {
+                        <i class="logo-placeholder" data-testid="transaction-logo-placeholder" data-lucide="wallet"></i>
+                      }
+                    </div>
+                    <div class="transaction-date">
                       <b class="date" data-testid="date">@transaction.Date.ToString("dd-MM")</b>
                       <div>
                         @if (transaction.IsFixed || transaction.IsNotFixed)
@@ -247,7 +288,7 @@
                     </div>
                     <div>
                       <div><span class="amount" data-testid="amount">@transaction.Amount.ToString("0.00")</span></div>
-                      <i data-testid="name-other-party">@transaction.NameOtherParty</i>
+                      <i data-testid="name-other-party">@(transaction.DisplayName ?? transaction.NameOtherParty)</i>
                       <small>@transaction.Description</small>
                     </div>
                   </div>
@@ -292,7 +333,18 @@
                 @foreach (var transaction in ibanBalance.Transactions)
                 {
                   <div id="transaction-@transaction.Id" class="transaction @(transaction.Amount > 0 ? "positive" : "negative")">
-                    <div>
+                    <div class="transaction-logo" data-testid="transaction-logo">
+                      @if (transaction.LogoUrl is not null)
+                      {
+                        <img class="logo-image" src="@transaction.LogoUrl" alt="" loading="lazy" data-testid="transaction-logo-image" />
+                        <i class="logo-placeholder hidden" data-testid="transaction-logo-placeholder" data-lucide="wallet"></i>
+                      }
+                      else
+                      {
+                        <i class="logo-placeholder" data-testid="transaction-logo-placeholder" data-lucide="wallet"></i>
+                      }
+                    </div>
+                    <div class="transaction-date">
                       <b class="date" data-testid="date">@transaction.Date.ToString("dd-MM")</b>
                       <div>
                         @if (transaction.IsFixed || transaction.IsNotFixed)
@@ -303,7 +355,7 @@
                     </div>
                     <div>
                       <div><span class="amount">@transaction.Amount.ToString("0.00")</span></div>
-                      <i>@transaction.NameOtherParty</i>
+                      <i>@(transaction.DisplayName ?? transaction.NameOtherParty)</i>
                       <small>@transaction.Description</small>
                     </div>
                   </div>

@@ -1,0 +1,40 @@
+@model Budget.Web.Features.Merchants.MerchantsViewModel
+@using Budget.Web.Features.Merchants
+
+<section>
+  <h1>Tegenpartijen</h1>
+
+  <input
+    id="merchant-search"
+    name="search"
+    type="search"
+    data-testid="merchant-search"
+    placeholder="Zoek op naam..."
+    hx-get="/merchants/rows"
+    hx-trigger="input changed delay:300ms, search"
+    hx-target="#merchant-rows"
+    hx-swap="outerHTML"
+    hx-include="this"
+  />
+
+  <table>
+    <thead>
+      <tr>
+        <th>
+          <a href="#" data-testid="sort-name" hx-get="/merchants/rows" hx-vals='{"sort":"name","dir":"asc"}' hx-include="#merchant-search" hx-target="#merchant-rows" hx-swap="outerHTML">Naam</a>
+        </th>
+        <th>
+          <a href="#" data-testid="sort-count" hx-get="/merchants/rows" hx-vals='{"sort":"count","dir":"desc"}' hx-include="#merchant-search" hx-target="#merchant-rows" hx-swap="outerHTML">#txn</a>
+        </th>
+        <th>
+          <a href="#" data-testid="sort-first-seen" hx-get="/merchants/rows" hx-vals='{"sort":"firstSeen","dir":"desc"}' hx-include="#merchant-search" hx-target="#merchant-rows" hx-swap="outerHTML">Eerste keer</a>
+        </th>
+        <th>
+          <a href="#" data-testid="sort-status" hx-get="/merchants/rows" hx-vals='{"sort":"status","dir":"asc"}' hx-include="#merchant-search" hx-target="#merchant-rows" hx-swap="outerHTML">Status</a>
+        </th>
+        <th></th>
+      </tr>
+    </thead>
+    @await Html.PartialAsync("~/Views/Merchants/_Rows.cshtml", new RowsPartialModel { Search = "", Sort = "", Dir = "", Rows = Model.Rows, RecentOptions = Model.RecentOptions })
+  </table>
+</section>

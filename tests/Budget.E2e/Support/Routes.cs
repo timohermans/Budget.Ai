@@ -10,4 +10,5 @@ public static class Routes
     public static string Budget(int year, int month, int week) => $"{BaseUrl}/budget/{year}/{month}/{week}";
     public static string Upload => $"{BaseUrl}/transactions/upload";
     public static string ToggleFixed => $"{BaseUrl}/transactions/toggle-fixed";
+    public static string Merchants() => $"{BaseUrl}/merchants";
 }

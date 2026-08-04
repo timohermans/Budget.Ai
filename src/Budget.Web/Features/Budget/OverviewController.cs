@@ -47,14 +47,22 @@ public class OverviewController(BudgetDbContext db) : Controller
             .OrderByDescending(x => x.Count)
             .Select(x => x.Iban)
             .ToListAsync(ct);
+        
+        // TODO: rewrite query below to use new .NET 10 LeftJoin
+        var transactionsQuery =
+            from t in db.Transactions
+            join m in db.Merchants on t.NameOtherPartyNormalized equals m.NameNormalized into mj // this one is necessary when not linked manually but found naturally
+            from m in mj.DefaultIfEmpty()
+            join a in db.MerchantAliases on t.NameOtherPartyNormalized equals a.NameNormalized into aj
+            from a in aj.DefaultIfEmpty()
+            join ma in db.Merchants on a.MerchantId equals ma.Id into maj
+            from ma in maj.DefaultIfEmpty()
+            where t.UserId == userId && t.Date >= lastMonth && t.Date < nextMonth
+            orderby t.Date descending, t.NameOtherParty descending
+            select new TransactionOverviewQueryResult(t, m.DisplayName ?? ma.DisplayName, m.LogoUrl ?? ma.LogoUrl);
+        var transactions = await transactionsQuery.ToListAsync();
 
-        var window = await db.Transactions
-            .Where(t => t.UserId == userId && t.Date >= lastMonth && t.Date < nextMonth)
-            .OrderByDescending(t => t.Date)
-            .ThenByDescending(t => t.NameOtherParty)
-            .ToListAsync(ct);
-
-        var summary = SummaryCalculator.Calculate(year, month, iban, window, ownIbans);
+        var summary = SummaryCalculator.Calculate(year, month, iban, transactions, ownIbans);
 
         var viewModel = new OverviewViewModel
         {
