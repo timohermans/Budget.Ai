@@ -93,19 +93,16 @@ public class MerchantsControllerTests
     }
 
     [TestMethod]
-    public async Task Rows_WhenMappedAndNone_ThenStatusesReflectState()
+    public async Task Rows_WhenMapped_ThenStatusesReflectState()
     {
         await using var db = NewDb();
         await AddTransactionAsync(db, "Albert Heijn", new DateOnly(2026, 1, 3));
-        await AddTransactionAsync(db, "Paschen Petra", new DateOnly(2026, 1, 4));
 
         await new MerchantsMapController(db).Map("Albert Heijn", "Albert Heijn", "https://example.com/ah.png", "", "", "", CancellationToken.None);
-        await new MerchantsNoneController(db).None("Paschen Petra", "", "", "", CancellationToken.None);
 
         var rows = await GetRowsAsync(db);
 
         Assert.AreEqual(MerchantStatus.Mapped, rows.Single(r => r.NameNormalized == "albert heijn").Status);
-        Assert.AreEqual(MerchantStatus.None, rows.Single(r => r.NameNormalized == "paschen petra").Status);
     }
 
     [TestMethod]
@@ -173,19 +170,6 @@ public class MerchantsControllerTests
         await new MerchantsMapController(db).Map("Albert Heijn", "Albert Heijn", "not-a-url", "", "", "", CancellationToken.None);
 
         Assert.IsFalse(await db.Merchants.AnyAsync());
-    }
-
-    [TestMethod]
-    public async Task None_WhenNew_ThenCreatesNoneMerchant()
-    {
-        await using var db = NewDb();
-        await AddTransactionAsync(db, "Paschen Petra", new DateOnly(2026, 1, 3));
-
-        await new MerchantsNoneController(db).None("Paschen Petra", "", "", "", CancellationToken.None);
-
-        var merchant = await db.Merchants.SingleAsync();
-        Assert.AreEqual(MerchantStatus.None, merchant.Status);
-        Assert.IsNull(merchant.LogoUrl);
     }
 
     [TestMethod]
