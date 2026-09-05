@@ -10,7 +10,7 @@ concurrency:
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 env:
-  REGISTRY: registry.timo-hermans.nl
+  REGISTRY: images.timo-hermans.nl
   IMAGE_NAME: budget-ai
   # Directory (relative to the Cluster repo root) containing the kustomization.yaml
   # that pins the budget-ai image.
@@ -127,35 +127,3 @@ jobs:
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.version }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-
-  update-gitops:
-    name: Bump image in GitOps repo
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    needs: build-image
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          repository: timohermans/Cluster
-          token: ${{ secrets.GITOPS_TOKEN }}
-
-      - name: Install kustomize
-        run: |
-          curl -sSL "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" | bash
-          sudo mv kustomize /usr/local/bin/
-
-      - name: Update image tag
-        working-directory: ${{ env.GITOPS_KUSTOMIZATION_DIR }}
-        run: kustomize edit set image ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.build-image.outputs.version }}
-
-      - name: Commit & push
-        run: |
-          git config user.name "timo bot"
-          git config user.email "noreply@timo.nl"
-          git add .
-          if git diff --cached --quiet; then
-            echo "No version change to commit"
-          else
-            git commit -m "chore: bump budget-ai to ${{ needs.build-image.outputs.version }}"
-            git push
-          fi
