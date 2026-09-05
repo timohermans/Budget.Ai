@@ -7,6 +7,7 @@ using dotenv.net;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
@@ -19,6 +20,7 @@ DotEnv.Load(new DotEnvOptions(probeForEnv: true, probeLevelsToSearch: 5));
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllersWithViews();
+builder.Services.AddHealthChecks().AddDbContextCheck<BudgetDbContext>();
 
 var connection = builder.Configuration.GetConnectionString("Budget")
     ?? Environment.GetEnvironmentVariable("BUDGET_DB_CONNECTION") // TODO: Deze kan eigenlijk weg
@@ -87,6 +89,8 @@ if (app.Environment.IsDevelopment())
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapHealthChecks("/health/live", new HealthCheckOptions { Predicate = _ => false }).AllowAnonymous();
+app.MapHealthChecks("/health/ready", new HealthCheckOptions { Predicate = _ => true }).AllowAnonymous();
 
 app.MapGet("/", () => Results.Redirect("/budget"));
 
