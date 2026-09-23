@@ -8,7 +8,7 @@ Defines the externally observable behavior of the .NET MVC budget application - 
 
 ### Requirement: Budget overview page
 
-The system SHALL render a budget overview page for a given year and month showing the month name and date range, the monthly budget, income, expenses, spent, and left totals, one summary card per week (week number, left, spent, budget, progress bar), a balance section per IBAN, and expandable transaction lists.
+The system SHALL render a budget overview page for a given year and month showing the month name and date range, the monthly budget, income, expenses, spent, and left totals, one summary card per week (week number, left, spent, budget, progress bar), a balance section per IBAN, and expandable transaction lists. The income and expense values in the summary SHALL be clickable, and clicking them SHALL display a fixed-transaction detail card for the selected type. The detail card state SHALL be reflected in the URL via a `fixed` query parameter.
 
 #### Scenario: Empty dashboard
 
@@ -43,6 +43,26 @@ The system SHALL render a budget overview page for a given year and month showin
 
 - **WHEN** a week is expanded
 - **THEN** its transactions SHALL be listed with date, amount, counterparty name, description, and a fixed-status toggle when the transaction is fixed or explicitly flagged
+
+#### Scenario: Overview renders with clickable income and expense values
+
+- **WHEN** a user opens the budget overview
+- **THEN** the income and expense values in the summary card are rendered as clickable elements
+- **THEN** clicking the income value fetches and displays a fixed income detail card
+- **THEN** clicking the expense value fetches and displays a fixed expense detail card
+
+#### Scenario: Detail card state is URL-representable
+
+- **WHEN** a user clicks the income value
+- **THEN** the URL includes `?fixed=income`
+- **WHEN** the user shares or bookmarks that URL
+- **THEN** opening it renders the overview with the fixed income detail card visible
+
+#### Scenario: Navigating away dismisses the detail card
+
+- **WHEN** a user has a fixed detail card open and navigates to a different month
+- **THEN** the detail card is removed from the page
+- **THEN** the URL no longer contains the `fixed` query parameter
 
 ### Requirement: Budget calculation engine
 
