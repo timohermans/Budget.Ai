@@ -1,4 +1,15 @@
 @model Budget.Web.Features.Budget.OverviewViewModel
+@{
+    var sortSuffix = OverviewSorts.ToQuery(Model.Sort) is { } sortQuery ? $"?sort={sortQuery}" : "";
+    var currentPath = Model.Week > 0
+        ? $"/budget/{Model.Year}/{Model.Month}/{Model.Week}"
+        : Model.Iban is not null
+            ? $"/budget/{Model.Year}/{Model.Month}/{Model.Iban}"
+            : $"/budget/{Model.Year}/{Model.Month}";
+    var previousUrl = $"/budget/{Model.DatePrevious.Year}/{Model.DatePrevious.Month}{sortSuffix}";
+    var todayUrl = $"/budget/{sortSuffix}";
+    var nextUrl = $"/budget/{Model.DateNext.Year}/{Model.DateNext.Month}{sortSuffix}";
+}
 
 <section class="row justify-content-center">
   <h1 class="col-12 col-md-4">Overzicht</h1>
@@ -36,9 +47,9 @@
   </div>
 
   <div class="col-6 col-md-4" data-testid="nav-container" hx-boost="true">
-    <a class="outline secondary" role="button" href="/budget/@Model.DatePrevious.Year/@Model.DatePrevious.Month" data-testid="nav-previous"><i data-lucide="arrow-left" width="16" height="16"></i></a>
-    <a role="button" class="outline secondary" data-testid="nav-today" href="/budget/">nu</a>
-    <a class="outline secondary" role="button" href="/budget/@Model.DateNext.Year/@Model.DateNext.Month" data-testid="nav-next">
+    <a class="outline secondary" role="button" href="@previousUrl" data-testid="nav-previous"><i data-lucide="arrow-left" width="16" height="16"></i></a>
+    <a role="button" class="outline secondary" data-testid="nav-today" href="@todayUrl">nu</a>
+    <a class="outline secondary" role="button" href="@nextUrl" data-testid="nav-next">
       <i data-lucide="arrow-right" width="16" height="16"></i>
     </a>
   </div>
@@ -285,6 +296,30 @@
     }
   </section>
 
+  <section class="d-flex justify-content-center">
+    <div>
+      <label for="sort"><small>Sorteren op</small></label>
+      <select
+        id="sort"
+        name="sort"
+        data-testid="sort-select"
+        aria-label="Sorteren"
+        hx-get="@currentPath"
+        hx-trigger="change"
+        hx-target="body"
+        hx-swap="show:top"
+        hx-push-url="true"
+      >
+        <option value="" selected="@(Model.Sort == OverviewSort.DateDesc)">datum (eind - begin)</option>
+        <option value="datum-begin-eind" selected="@(Model.Sort == OverviewSort.DateAsc)">datum (begin - eind)</option>
+        <option value="hoogste-uitgaves" selected="@(Model.Sort == OverviewSort.AmountDescHoogsteUitgaves)">hoogste uitgaves</option>
+        <option value="kleinste-uitgaves" selected="@(Model.Sort == OverviewSort.AmountAscKleinsteUitgaves)">kleinste uitgaves</option>
+        <option value="winkel-a-z" selected="@(Model.Sort == OverviewSort.NameAsc)">winkel (a - z)</option>
+        <option value="winkel-z-a" selected="@(Model.Sort == OverviewSort.NameDesc)">winkel (z - a)</option>
+      </select>
+    </div>
+  </section>
+
   <section class="collapsible-list">
     <h4><i>Budget per week</i></h4>
     @foreach (var (weekNumber, weekSummary) in Model.Summary.Weeks)
@@ -299,7 +334,7 @@
             <div
               class="summary"
               data-testid="week-@weekNumber-summary"
-              hx-get="@(isExpanded ? $"/budget/{Model.Year}/{Model.Month}" : $"/budget/{Model.Year}/{Model.Month}/{weekNumber}")"
+              hx-get="@(isExpanded ? $"/budget/{Model.Year}/{Model.Month}" : $"/budget/{Model.Year}/{Model.Month}/{weekNumber}")@sortSuffix"
               hx-swap="@(isExpanded ? "show:top" : $"show:#week-{weekNumber}:top")"
               hx-target="body"
               hx-push-url="true"
@@ -374,7 +409,7 @@
             >
             <div class="summary"
               data-testid="iban-@iban-summary"
-              hx-get="@(isExpanded ? $"/budget/{Model.Year}/{Model.Month}" : $"/budget/{Model.Year}/{Model.Month}/{iban}")"
+              hx-get="@(isExpanded ? $"/budget/{Model.Year}/{Model.Month}" : $"/budget/{Model.Year}/{Model.Month}/{iban}")@sortSuffix"
               hx-swap="@(isExpanded ? "show:top" : $"show:#iban-{iban}:top")"
               hx-target="body"
               hx-push-url="true"
@@ -393,7 +428,7 @@
               <div>
                 @foreach (var transaction in ibanBalance.Transactions)
                 {
-                  <div id="transaction-@transaction.Id" class="transaction @(transaction.Amount > 0 ? "positive" : "negative")">
+                  <div id="transaction-@transaction.Id" data-testid="transaction" class="transaction @(transaction.Amount > 0 ? "positive" : "negative")">
                     <div class="transaction-logo" data-testid="transaction-logo">
                       @if (transaction.LogoUrl is not null)
                       {
@@ -415,8 +450,8 @@
                       </div>
                     </div>
                     <div>
-                      <div><span class="amount">@transaction.Amount.ToString("0.00")</span></div>
-                      <i>@(transaction.DisplayName ?? transaction.NameOtherParty)</i>
+                      <div><span class="amount" data-testid="amount">@transaction.Amount.ToString("0.00")</span></div>
+                      <i data-testid="name-other-party">@(transaction.DisplayName ?? transaction.NameOtherParty)</i>
                       <small>@transaction.Description</small>
                     </div>
                   </div>

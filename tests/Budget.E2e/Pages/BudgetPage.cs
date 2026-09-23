@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Text.RegularExpressions;
 using Budget.E2e.Support;
 using Microsoft.Playwright;
 
@@ -104,6 +105,41 @@ public class BudgetPage
     public ILocator FixedDetailCard => _page.GetByTestId("fixed-detail-card");
 
     public ILocator FixedDetailTransactions => _page.GetByTestId("fixed-detail-transaction");
+
+    public ILocator SortSelect => _page.GetByTestId("sort-select");
+
+    public async Task SelectSortAsync(string value)
+    {
+        await SortSelect.SelectOptionAsync(value);
+        await ExpectUrlContainsSortAsync(value);
+        await Assertions.Expect(SortSelect).ToHaveValueAsync(value, new() { Timeout = 30_000 });
+    }
+
+    public async Task GotoSortedAsync(int year, int month, string sort)
+    {
+        await _page.GotoAsync($"{Routes.Budget(year, month)}?sort={sort}");
+    }
+
+    public async Task ExpectUrlContainsSortAsync(string sort)
+    {
+        await Assertions.Expect(_page).ToHaveURLAsync(new Regex($"/budget/.*[?&]sort={Regex.Escape(sort)}($|&)"),
+            new() { Timeout = 30_000 });
+    }
+
+    public async Task ClickIbanHeaderAsync(string iban)
+    {
+        await _page.GetByTestId($"iban-{iban}-summary").ClickAsync();
+        await Assertions.Expect(_page.Locator($"#iban-{iban}").GetByTestId("transaction").First)
+            .ToBeVisibleAsync(new() { Timeout = 30_000 });
+    }
+
+    public async Task ExpectIbanTransactionOrderAsync(string iban, params string[] expectedNames)
+    {
+        var section = _page.Locator($"#iban-{iban}");
+        for (var i = 0; i < expectedNames.Length; i++)
+            await Assertions.Expect(section.GetByTestId("transaction").Nth(i).GetByTestId("name-other-party"))
+                .ToHaveTextAsync(expectedNames[i], new() { Timeout = 30_000 });
+    }
 
     private async Task ExpectMonthAsync(DateOnly expectedMonth)
     {

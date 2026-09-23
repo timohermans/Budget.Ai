@@ -61,6 +61,13 @@ public class WeekCardComponent
         return await transactions.CountAsync() > 0;
     }
 
+    public async Task ExpectTransactionOrderAsync(params string[] expectedNames)
+    {
+        for (var i = 0; i < expectedNames.Length; i++)
+            await Assertions.Expect(WeekElement.GetByTestId("transaction").Nth(i).GetByTestId("name-other-party"))
+                .ToHaveTextAsync(expectedNames[i], new() { Timeout = 30_000 });
+    }
+
     public async Task<List<TransactionInfo>> GetTransactionsAsync()
     {
         var rows = await WeekElement.GetByTestId("transaction").AllAsync();

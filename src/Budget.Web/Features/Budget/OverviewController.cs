@@ -19,11 +19,12 @@ public class OverviewController(BudgetDbContext db) : Controller
     /// <param name="month">The month to show, or 0 for the current month.</param>
     /// <param name="weekOrIban">A week number to expand or an IBAN to select as the main account.</param>
     /// <param name="fixed">When set to "income" or "expenses", renders the fixed-transaction detail card for that type.</param>
+    /// <param name="sort">The sort order for expanded transaction lists; when invalid or missing, the default date-descending order is used.</param>
     /// <param name="ct">A token to cancel the operation.</param>
     [Route("")]
     [Route("{year:int}/{month:int}")]
     [Route("{year:int}/{month:int}/{weekOrIban}")]
-    public async Task<IActionResult> Index(int year, int month, string? weekOrIban, string? @fixed, CancellationToken ct)
+    public async Task<IActionResult> Index(int year, int month, string? weekOrIban, string? @fixed, string? sort, CancellationToken ct)
     {
         var today = DateOnly.FromDateTime(DateTime.Today);
         if (year == 0)
@@ -65,6 +66,16 @@ public class OverviewController(BudgetDbContext db) : Controller
 
         var summary = SummaryCalculator.Calculate(year, month, iban, transactions, ownIbans);
 
+        var overviewSort = OverviewSorts.Parse(sort);
+        if (overviewSort != OverviewSort.DateDesc)
+        {
+            var comparison = OverviewSorts.CreateComparison(overviewSort);
+            foreach (var weekSummary in summary.Weeks.Values)
+                weekSummary.Transactions.Sort(comparison);
+            foreach (var balance in summary.IbanBalances.Values)
+                balance.Transactions.Sort(comparison);
+        }
+
         var viewModel = new OverviewViewModel
         {
             Year = year,
@@ -79,6 +90,7 @@ public class OverviewController(BudgetDbContext db) : Controller
             MonthEnd = nextMonth.AddDays(-1).ToString("dd MMM", CultureInfo.InvariantCulture),
             Summary = summary,
             Fixed = @fixed,
+            Sort = overviewSort,
         };
 
         if (@fixed is not null && Request.Headers.ContainsKey("HX-Request"))
@@ -101,5 +113,6 @@ public class OverviewViewModel
     public required string MonthStart { get; init; }
     public required string MonthEnd { get; init; }
     public required string? Fixed { get; init; }
+    public required OverviewSort Sort { get; init; }
     public required Summary Summary { get; init; }
 }
