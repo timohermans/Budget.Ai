@@ -41,7 +41,23 @@ if (!string.IsNullOrEmpty(oidcAuthority))
             options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
             options.DefaultChallengeScheme = OpenIdConnectDefaults.AuthenticationScheme;
         })
-        .AddCookie(options => options.ExpireTimeSpan = TimeSpan.FromHours(8))
+        .AddCookie(options =>
+        {
+            options.ExpireTimeSpan = TimeSpan.FromHours(8);
+            options.Events.OnRedirectToLogin = context =>
+            {
+                var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger>();
+                logger.LogInformation("Yeah I'm getting here");
+                if (context.Request.Headers.ContainsKey("HX-Request"))
+                {
+                    context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                    return Task.CompletedTask;
+                }
+
+                context.Response.Redirect(context.RedirectUri);
+                return Task.CompletedTask;
+            };
+        })
         .AddOpenIdConnect(options =>
         {
             options.Authority = oidcAuthority;
@@ -85,6 +101,18 @@ if (app.Environment.IsDevelopment())
 {
     app.UseMiddleware<TestModeAuthMiddleware>();
 }
+
+app.Use(async (context, next) =>
+{
+    if (context.Request.Headers.ContainsKey("HX-Request")
+        && !(context.User.Identity?.IsAuthenticated ?? false))
+    {
+        context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+        return;
+    }
+
+    await next();
+});
 
 app.UseAuthorization();
 

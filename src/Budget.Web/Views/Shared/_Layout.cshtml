@@ -115,6 +115,12 @@
         loadIcons();
       });
 
+      htmx.on("htmx:responseError", function (evt) {
+        if (evt.detail.xhr.status === 401) {
+          window.location.reload();
+        }
+      });
+
       loadIcons();
     </script>
     @await RenderSectionAsync("Scripts", required: false)
