@@ -83,6 +83,28 @@ public class BudgetPage
         await ExpectMonthAsync(expectedMonth);
     }
 
+    public async Task ClickIncomeValueAsync()
+    {
+        await _page.GetByTestId("income-value").ClickAsync();
+        await Assertions.Expect(_page.GetByTestId("fixed-detail-card")).ToBeVisibleAsync(new() { Timeout = 30_000 });
+    }
+
+    public async Task ClickExpensesValueAsync()
+    {
+        await _page.GetByTestId("expenses-value").ClickAsync();
+        await Assertions.Expect(_page.GetByTestId("fixed-detail-card")).ToBeVisibleAsync(new() { Timeout = 30_000 });
+    }
+
+    public async Task CloseFixedDetailAsync()
+    {
+        await _page.GetByTestId("fixed-detail-close").ClickAsync();
+        await Assertions.Expect(_page.GetByTestId("fixed-detail-card")).ToHaveCountAsync(0, new() { Timeout = 30_000 });
+    }
+
+    public ILocator FixedDetailCard => _page.GetByTestId("fixed-detail-card");
+
+    public ILocator FixedDetailTransactions => _page.GetByTestId("fixed-detail-transaction");
+
     private async Task ExpectMonthAsync(DateOnly expectedMonth)
     {
         var expected = expectedMonth.ToString("MMMM", CultureInfo.InvariantCulture);

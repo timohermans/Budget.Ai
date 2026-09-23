@@ -56,7 +56,7 @@ public class OverviewControllerTests
 
     private static async Task<List<TransactionTemplateModel>> GetMonthTransactionsAsync(OverviewController controller)
     {
-        var result = await controller.Index(Year, Month, null, CancellationToken.None);
+        var result = await controller.Index(Year, Month, null, null, CancellationToken.None);
         var summary = ((OverviewViewModel)((ViewResult)result).Model!).Summary;
         return summary.Weeks.Values
             .SelectMany(w => w.Transactions)
@@ -123,5 +123,49 @@ public class OverviewControllerTests
         var row = transactions.Single();
         Assert.IsNull(row.LogoUrl);
         Assert.IsNull(row.DisplayName);
+    }
+
+    [TestMethod]
+    public async Task Index_WhenFixedParamAndHtmxRequest_ThenReturnsFixedTransactionsPartial()
+    {
+        await using var db = NewDb();
+        var controller = NewController(db);
+        controller.HttpContext.Request.Headers["HX-Request"] = "true";
+
+        var result = await controller.Index(Year, Month, null, "income", CancellationToken.None);
+
+        var partial = result as PartialViewResult;
+        Assert.IsNotNull(partial, "htmx request with fixed param should return a partial view");
+        Assert.AreEqual("_FixedTransactions", partial.ViewName);
+        var model = partial.Model as OverviewViewModel;
+        Assert.IsNotNull(model);
+        Assert.AreEqual("income", model.Fixed);
+    }
+
+    [TestMethod]
+    public async Task Index_WhenFixedParamAndNotHtmxRequest_ThenReturnsFullView()
+    {
+        await using var db = NewDb();
+        var controller = NewController(db);
+
+        var result = await controller.Index(Year, Month, null, "income", CancellationToken.None);
+
+        var view = result as ViewResult;
+        Assert.IsNotNull(view, "plain request with fixed param should return the full view (bookmark/share scenario)");
+        var model = view.Model as OverviewViewModel;
+        Assert.IsNotNull(model);
+        Assert.AreEqual("income", model.Fixed);
+    }
+
+    [TestMethod]
+    public async Task Index_WhenFixedParamAbsent_ThenReturnsFullView()
+    {
+        await using var db = NewDb();
+        var controller = NewController(db);
+        controller.HttpContext.Request.Headers["HX-Request"] = "true";
+
+        var result = await controller.Index(Year, Month, null, null, CancellationToken.None);
+
+        Assert.IsInstanceOfType<ViewResult>(result, "request without fixed param should return the full view");
     }
 }

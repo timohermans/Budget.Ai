@@ -88,6 +88,36 @@
         }
     }
 
+    .clickable {
+      cursor: pointer;
+    }
+
+    .fixed-detail-card {
+      max-width: 800px;
+      margin: var(--pico-spacing) auto 0;
+
+      .fixed-detail-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+
+        h5 {
+          margin: 0;
+        }
+      }
+
+      .transaction {
+        .date {
+          text-wrap: nowrap;
+        }
+
+        > * {
+          display: flex;
+          flex-direction: column;
+        }
+      }
+    }
+
     .collapsible-list {
       max-width: 800px;
       margin: 0 auto;
@@ -214,7 +244,31 @@
       <div>
         <small>Budget</small>
         <h2 data-testid="budget-value">@Model.Summary.Budget.ToString()</h2>
-        <small><span data-testid="income-value">@Model.Summary.Income.ToString()</span> - <span data-testid="expenses-value">@Model.Summary.Expenses.ToString()</span></small>
+        <small>
+          <span
+            class="clickable"
+            data-testid="income-value-clickable"
+            hx-get="/budget/@Model.Year/@Model.Month?fixed=income"
+            hx-target="#fixed-detail"
+            hx-swap="innerHTML"
+            hx-push-url="true"
+          >
+            <i data-lucide="loader" class="spinning htmx-indicator" data-testid="income-loading"></i>
+            <span data-testid="income-value">@Model.Summary.Income.ToString()</span>
+          </span>
+          -
+          <span
+            class="clickable"
+            data-testid="expenses-value-clickable"
+            hx-get="/budget/@Model.Year/@Model.Month?fixed=expenses"
+            hx-target="#fixed-detail"
+            hx-swap="innerHTML"
+            hx-push-url="true"
+          >
+            <i data-lucide="loader" class="spinning htmx-indicator" data-testid="expenses-loading"></i>
+            <span data-testid="expenses-value">@Model.Summary.Expenses.ToString()</span>
+          </span>
+        </small>
       </div>
       <div>
         <small>Uitgegeven</small>
@@ -223,6 +277,13 @@
       </div>
     </article>
   </div>
+
+  <section id="fixed-detail" data-testid="fixed-detail">
+    @if (Model.Fixed is not null)
+    {
+      <partial name="_FixedTransactions" model="Model" />
+    }
+  </section>
 
   <section class="collapsible-list">
     <h4><i>Budget per week</i></h4>

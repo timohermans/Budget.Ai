@@ -18,11 +18,12 @@ public class OverviewController(BudgetDbContext db) : Controller
     /// <param name="year">The year of the month to show, or 0 for the current year.</param>
     /// <param name="month">The month to show, or 0 for the current month.</param>
     /// <param name="weekOrIban">A week number to expand or an IBAN to select as the main account.</param>
+    /// <param name="fixed">When set to "income" or "expenses", renders the fixed-transaction detail card for that type.</param>
     /// <param name="ct">A token to cancel the operation.</param>
     [Route("")]
     [Route("{year:int}/{month:int}")]
     [Route("{year:int}/{month:int}/{weekOrIban}")]
-    public async Task<IActionResult> Index(int year, int month, string? weekOrIban, CancellationToken ct)
+    public async Task<IActionResult> Index(int year, int month, string? weekOrIban, string? @fixed, CancellationToken ct)
     {
         var today = DateOnly.FromDateTime(DateTime.Today);
         if (year == 0)
@@ -77,7 +78,11 @@ public class OverviewController(BudgetDbContext db) : Controller
             MonthStart = date.ToString("dd MMM", CultureInfo.InvariantCulture),
             MonthEnd = nextMonth.AddDays(-1).ToString("dd MMM", CultureInfo.InvariantCulture),
             Summary = summary,
+            Fixed = @fixed,
         };
+
+        if (@fixed is not null && Request.Headers.ContainsKey("HX-Request"))
+            return PartialView("_FixedTransactions", viewModel);
 
         return View(viewModel);
     }
@@ -95,5 +100,6 @@ public class OverviewViewModel
     public required string MonthDisplay { get; init; }
     public required string MonthStart { get; init; }
     public required string MonthEnd { get; init; }
+    public required string? Fixed { get; init; }
     public required Summary Summary { get; init; }
 }

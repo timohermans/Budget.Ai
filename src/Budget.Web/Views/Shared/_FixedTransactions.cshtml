@@ -1,0 +1,35 @@
+@model Budget.Web.Features.Budget.OverviewViewModel
+
+@{
+    var isIncome = string.Equals(Model.Fixed, "income", StringComparison.OrdinalIgnoreCase);
+    var transactions = (isIncome ? Model.Summary.IncomeTransactions : Model.Summary.ExpenseTransactions)
+        .OrderBy(t => t.Amount);
+    var label = isIncome ? "Vaste inkomsten" : "Vaste uitgaven";
+}
+
+<article class="fixed-detail-card" data-testid="fixed-detail-card">
+  <header class="fixed-detail-header">
+    <h5 data-testid="fixed-detail-title">@label</h5>
+    <a
+      role="button"
+      class="outline secondary fixed-detail-close"
+      data-testid="fixed-detail-close"
+      href="/budget/@Model.Year/@Model.Month"
+      hx-get="/budget/@Model.Year/@Model.Month"
+      hx-target="body"
+      hx-push-url="true"
+      aria-label="Sluiten"
+    >&times;</a>
+  </header>
+  @foreach (var transaction in transactions)
+  {
+    <div data-testid="fixed-detail-transaction" class="transaction @(transaction.Amount > 0 ? "positive" : "negative")">
+      <b class="date" data-testid="date">@transaction.Date.ToString("dd-MM")</b>
+      <div>
+        <div><span class="amount" data-testid="amount">@transaction.Amount.ToString("0.00")</span></div>
+        <i data-testid="name-other-party">@(transaction.DisplayName ?? transaction.NameOtherParty)</i>
+        <small>@transaction.Description</small>
+      </div>
+    </div>
+  }
+</article>
