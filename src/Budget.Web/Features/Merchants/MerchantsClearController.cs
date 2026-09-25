@@ -6,8 +6,10 @@ using Microsoft.EntityFrameworkCore;
 namespace Budget.Web.Features.Merchants;
 
 [Route("merchants")]
-public class MerchantsClearController(BudgetDbContext db) : Controller
+public class MerchantsClearController(BudgetDbContext db, ILogger<MerchantsClearController>? logger = null) : Controller
 {
+    private readonly ILogger<MerchantsClearController> _logger = logger ?? NullLogger<MerchantsClearController>.Instance;
+
     [HttpPost("clear")]
     public async Task<IActionResult> Clear(
         string name, string search, string sort, string dir, CancellationToken ct)
@@ -24,12 +26,16 @@ public class MerchantsClearController(BudgetDbContext db) : Controller
                     .ToListAsync(ct);
                 db.MerchantAliases.RemoveRange(aliases);
                 db.Merchants.Remove(merchant);
+                _logger.LogInformation("Cleared merchant {Name} and its {AliasCount} alias(es)", key, aliases.Count);
             }
             else
             {
                 var alias = await db.MerchantAliases.SingleOrDefaultAsync(a => a.NameNormalized == key, ct);
                 if (alias is not null)
+                {
                     db.MerchantAliases.Remove(alias);
+                    _logger.LogInformation("Cleared alias {Name}", key);
+                }
             }
 
             await db.SaveChangesAsync(ct);

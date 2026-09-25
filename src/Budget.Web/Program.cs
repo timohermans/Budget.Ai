@@ -46,14 +46,15 @@ if (!string.IsNullOrEmpty(oidcAuthority))
             options.ExpireTimeSpan = TimeSpan.FromHours(8);
             options.Events.OnRedirectToLogin = context =>
             {
-                var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger>();
-                logger.LogInformation("Yeah I'm getting here");
+                var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
                 if (context.Request.Headers.ContainsKey("HX-Request"))
                 {
+                    logger.LogDebug("Unauthorized htmx request for {Path}; returning 401", context.Request.Path);
                     context.Response.StatusCode = StatusCodes.Status401Unauthorized;
                     return Task.CompletedTask;
                 }
 
+                logger.LogDebug("Unauthenticated request for {Path}; redirecting to login", context.Request.Path);
                 context.Response.Redirect(context.RedirectUri);
                 return Task.CompletedTask;
             };
@@ -92,6 +93,13 @@ builder.Services.AddAuthorization(options =>
 });
 
 var app = builder.Build();
+
+app.UseExceptionHandler(errorApp => errorApp.Run(async context =>
+{
+    context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+    context.Response.ContentType = "text/plain";
+    await context.Response.WriteAsync("An unexpected error occurred.");
+}));
 
 app.UseForwardedHeaders();
 

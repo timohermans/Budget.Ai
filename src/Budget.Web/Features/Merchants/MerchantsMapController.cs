@@ -6,8 +6,10 @@ using Microsoft.EntityFrameworkCore;
 namespace Budget.Web.Features.Merchants;
 
 [Route("merchants")]
-public class MerchantsMapController(BudgetDbContext db) : Controller
+public class MerchantsMapController(BudgetDbContext db, ILogger<MerchantsMapController>? logger = null) : Controller
 {
+    private readonly ILogger<MerchantsMapController> _logger = logger ?? NullLogger<MerchantsMapController>.Instance;
+
     [HttpPost("map")]
     public async Task<IActionResult> Map(
         string name, string? displayName, string? logoUrl, string search, string sort, string dir, CancellationToken ct)
@@ -32,6 +34,7 @@ public class MerchantsMapController(BudgetDbContext db) : Controller
                     Status = MerchantStatus.Mapped,
                     UpdatedAt = DateTimeOffset.UtcNow,
                 });
+                _logger.LogInformation("Created merchant {Name} with display name {DisplayName}", key, displayName);
             }
             else
             {
@@ -39,9 +42,14 @@ public class MerchantsMapController(BudgetDbContext db) : Controller
                 merchant.LogoUrl = logoUrl?.Trim();
                 merchant.Status = MerchantStatus.Mapped;
                 merchant.UpdatedAt = DateTimeOffset.UtcNow;
+                _logger.LogInformation("Updated merchant {Name}", key);
             }
 
             await db.SaveChangesAsync(ct);
+        }
+        else if (key.Length > 0)
+        {
+            _logger.LogWarning("Merchant map for {Name} rejected: logo URL {LogoUrl} is invalid", key, logoUrl);
         }
 
         var model = await MerchantListQuery.BuildRowsPartialAsync(db, search ?? "", sort ?? "", dir ?? "", ct);
