@@ -4,6 +4,7 @@ using Budget.Web.Domain.Transactions;
 using Budget.Web.Features.Merchants;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace Budget.Tests.Features;
 
@@ -79,8 +80,8 @@ public class MerchantsControllerTests
         await AddTransactionAsync(db, "Albert Heijn", new DateOnly(2026, 1, 3));
         await AddTransactionAsync(db, "AH", new DateOnly(2026, 1, 5));
 
-        await new MerchantsMapController(db).Map("Albert Heijn", "Albert Heijn", "https://example.com/ah.png", "", "", "", CancellationToken.None);
-        await new MerchantsLinkController(db).Link("AH", "Albert Heijn", "", "", "", CancellationToken.None);
+        await new MerchantsMapController(db, NullLogger<MerchantsMapController>.Instance).Map("Albert Heijn", "Albert Heijn", "https://example.com/ah.png", "", "", "", CancellationToken.None);
+        await new MerchantsLinkController(db, NullLogger<MerchantsLinkController>.Instance).Link("AH", "Albert Heijn", "", "", "", CancellationToken.None);
 
         var rows = await GetRowsAsync(db);
 
@@ -98,7 +99,7 @@ public class MerchantsControllerTests
         await using var db = NewDb();
         await AddTransactionAsync(db, "Albert Heijn", new DateOnly(2026, 1, 3));
 
-        await new MerchantsMapController(db).Map("Albert Heijn", "Albert Heijn", "https://example.com/ah.png", "", "", "", CancellationToken.None);
+        await new MerchantsMapController(db, NullLogger<MerchantsMapController>.Instance).Map("Albert Heijn", "Albert Heijn", "https://example.com/ah.png", "", "", "", CancellationToken.None);
 
         var rows = await GetRowsAsync(db);
 
@@ -137,7 +138,7 @@ public class MerchantsControllerTests
         await using var db = NewDb();
         await AddTransactionAsync(db, "Albert Heijn", new DateOnly(2026, 1, 3));
 
-        await new MerchantsMapController(db).Map("Albert Heijn", "Albert Heijn", "https://example.com/ah.png", "", "", "", CancellationToken.None);
+        await new MerchantsMapController(db, NullLogger<MerchantsMapController>.Instance).Map("Albert Heijn", "Albert Heijn", "https://example.com/ah.png", "", "", "", CancellationToken.None);
 
         var merchant = await db.Merchants.SingleAsync();
         Assert.AreEqual("albert heijn", merchant.NameNormalized);
@@ -151,9 +152,9 @@ public class MerchantsControllerTests
     {
         await using var db = NewDb();
         await AddTransactionAsync(db, "Albert Heijn", new DateOnly(2026, 1, 3));
-        await new MerchantsMapController(db).Map("Albert Heijn", "Old Name", "https://example.com/old.png", "", "", "", CancellationToken.None);
+        await new MerchantsMapController(db, NullLogger<MerchantsMapController>.Instance).Map("Albert Heijn", "Old Name", "https://example.com/old.png", "", "", "", CancellationToken.None);
 
-        await new MerchantsMapController(db).Map("ALBERT HEIJN", "New Name", "https://example.com/new.png", "", "", "", CancellationToken.None);
+        await new MerchantsMapController(db, NullLogger<MerchantsMapController>.Instance).Map("ALBERT HEIJN", "New Name", "https://example.com/new.png", "", "", "", CancellationToken.None);
 
         var merchant = await db.Merchants.SingleAsync();
         Assert.AreEqual("New Name", merchant.DisplayName);
@@ -167,7 +168,7 @@ public class MerchantsControllerTests
         await using var db = NewDb();
         await AddTransactionAsync(db, "Albert Heijn", new DateOnly(2026, 1, 3));
 
-        await new MerchantsMapController(db).Map("Albert Heijn", "Albert Heijn", "not-a-url", "", "", "", CancellationToken.None);
+        await new MerchantsMapController(db, NullLogger<MerchantsMapController>.Instance).Map("Albert Heijn", "Albert Heijn", "not-a-url", "", "", "", CancellationToken.None);
 
         Assert.IsFalse(await db.Merchants.AnyAsync());
     }
@@ -178,9 +179,9 @@ public class MerchantsControllerTests
         await using var db = NewDb();
         await AddTransactionAsync(db, "Albert Heijn", new DateOnly(2026, 1, 3));
         await AddTransactionAsync(db, "AH", new DateOnly(2026, 1, 5));
-        await new MerchantsMapController(db).Map("Albert Heijn", "Albert Heijn", "https://example.com/ah.png", "", "", "", CancellationToken.None);
+        await new MerchantsMapController(db, NullLogger<MerchantsMapController>.Instance).Map("Albert Heijn", "Albert Heijn", "https://example.com/ah.png", "", "", "", CancellationToken.None);
 
-        await new MerchantsLinkController(db).Link("AH", "Albert Heijn", "", "", "", CancellationToken.None);
+        await new MerchantsLinkController(db, NullLogger<MerchantsLinkController>.Instance).Link("AH", "Albert Heijn", "", "", "", CancellationToken.None);
 
         var alias = await db.MerchantAliases.SingleAsync();
         Assert.AreEqual("ah", alias.NameNormalized);
@@ -194,7 +195,7 @@ public class MerchantsControllerTests
         await using var db = NewDb();
         await AddTransactionAsync(db, "AH", new DateOnly(2026, 1, 5));
 
-        await new MerchantsLinkController(db).Link("AH", "Albert Heijn", "", "", "", CancellationToken.None);
+        await new MerchantsLinkController(db, NullLogger<MerchantsLinkController>.Instance).Link("AH", "Albert Heijn", "", "", "", CancellationToken.None);
 
         Assert.IsFalse(await db.MerchantAliases.AnyAsync());
     }
@@ -205,10 +206,10 @@ public class MerchantsControllerTests
         await using var db = NewDb();
         await AddTransactionAsync(db, "Albert Heijn", new DateOnly(2026, 1, 3));
         await AddTransactionAsync(db, "AH", new DateOnly(2026, 1, 5));
-        await new MerchantsMapController(db).Map("Albert Heijn", "Albert Heijn", "https://example.com/ah.png", "", "", "", CancellationToken.None);
-        await new MerchantsLinkController(db).Link("AH", "Albert Heijn", "", "", "", CancellationToken.None);
+        await new MerchantsMapController(db, NullLogger<MerchantsMapController>.Instance).Map("Albert Heijn", "Albert Heijn", "https://example.com/ah.png", "", "", "", CancellationToken.None);
+        await new MerchantsLinkController(db, NullLogger<MerchantsLinkController>.Instance).Link("AH", "Albert Heijn", "", "", "", CancellationToken.None);
 
-        await new MerchantsClearController(db).Clear("AH", "", "", "", CancellationToken.None);
+        await new MerchantsClearController(db, NullLogger<MerchantsClearController>.Instance).Clear("AH", "", "", "", CancellationToken.None);
 
         Assert.IsFalse(await db.MerchantAliases.AnyAsync());
         Assert.HasCount(1, await db.Merchants.ToListAsync(), "The canonical merchant should survive clearing an alias");
@@ -220,10 +221,10 @@ public class MerchantsControllerTests
         await using var db = NewDb();
         await AddTransactionAsync(db, "Albert Heijn", new DateOnly(2026, 1, 3));
         await AddTransactionAsync(db, "AH", new DateOnly(2026, 1, 5));
-        await new MerchantsMapController(db).Map("Albert Heijn", "Albert Heijn", "https://example.com/ah.png", "", "", "", CancellationToken.None);
-        await new MerchantsLinkController(db).Link("AH", "Albert Heijn", "", "", "", CancellationToken.None);
+        await new MerchantsMapController(db, NullLogger<MerchantsMapController>.Instance).Map("Albert Heijn", "Albert Heijn", "https://example.com/ah.png", "", "", "", CancellationToken.None);
+        await new MerchantsLinkController(db, NullLogger<MerchantsLinkController>.Instance).Link("AH", "Albert Heijn", "", "", "", CancellationToken.None);
 
-        await new MerchantsClearController(db).Clear("Albert Heijn", "", "", "", CancellationToken.None);
+        await new MerchantsClearController(db, NullLogger<MerchantsClearController>.Instance).Clear("Albert Heijn", "", "", "", CancellationToken.None);
 
         Assert.IsFalse(await db.Merchants.AnyAsync());
         Assert.IsFalse(await db.MerchantAliases.AnyAsync(), "Aliases pointing at the cleared merchant should be removed");

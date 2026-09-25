@@ -2,6 +2,7 @@ using System.Text;
 using Budget.Web.Data;
 using Budget.Web.Domain.Transactions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace Budget.Tests.Domain;
 
@@ -96,7 +97,7 @@ public class RabobankCsvImporterTests
             .UseInMemoryDatabase(Guid.NewGuid().ToString())
             .Options;
         await using var db = new BudgetDbContext(options);
-        var importer = new RabobankCsvImporter(db);
+        var importer = new RabobankCsvImporter(db, NullLogger<RabobankCsvImporter>.Instance);
 
         var row = "\"OWNED1\",\"EUR\",\"RABONL2U\",\"000000000000000001\",\"2026-01-03\",\"2026-01-03\",\"-150,00\",\"\",\"THEIRS1\",\"Albert Heijn\",\"\",\"\",\"\",\"bc\",\"\",\"\",\"\",\"\",\"\",\"Groceries\",\"\",\"\",\"\",\"\",\"\",\"\"";
         using var stream = Stream(Header + "\n" + row);
@@ -119,7 +120,7 @@ public class RabobankCsvImporterTests
             .UseInMemoryDatabase(Guid.NewGuid().ToString())
             .Options;
         await using var db = new BudgetDbContext(options);
-        var importer = new RabobankCsvImporter(db);
+        var importer = new RabobankCsvImporter(db, NullLogger<RabobankCsvImporter>.Instance);
 
         var row1 = "\"OWNED1\",\"EUR\",\"RABONL2U\",\"000000000000000001\",\"2026-01-03\",\"2026-01-03\",\"-150,00\",\"\",\"THEIRS1\",\"Albert Heijn\",\"\",\"\",\"\",\"bc\",\"\",\"\",\"\",\"\",\"\",\"Groceries\",\"\",\"\",\"\",\"\",\"\",\"\"";
         var row2 = "\"OWNED1\",\"EUR\",\"RABONL2U\",\"000000000000000002\",\"2026-02-05\",\"2026-02-05\",\"3000,00\",\"\",\"THEIRS2\",\"Employer\",\"\",\"\",\"\",\"sb\",\"\",\"\",\"\",\"\",\"\",\"Salary\",\"\",\"\",\"\",\"\",\"\",\"\"";
@@ -137,7 +138,7 @@ public class RabobankCsvImporterTests
             .UseInMemoryDatabase(Guid.NewGuid().ToString())
             .Options;
         await using var db = new BudgetDbContext(options);
-        var importer = new RabobankCsvImporter(db);
+        var importer = new RabobankCsvImporter(db, NullLogger<RabobankCsvImporter>.Instance);
 
         using var stream = Stream(Header);
         var maxDate = await importer.ProcessAsync(stream, "user-1", CancellationToken.None);

@@ -6,9 +6,8 @@ using Microsoft.EntityFrameworkCore;
 namespace Budget.Web.Features.Merchants;
 
 [Route("merchants")]
-public class MerchantsMapController(BudgetDbContext db, ILogger<MerchantsMapController>? logger = null) : Controller
+public class MerchantsMapController(BudgetDbContext db, ILogger<MerchantsMapController> logger) : Controller
 {
-    private readonly ILogger<MerchantsMapController> _logger = logger ?? NullLogger<MerchantsMapController>.Instance;
 
     [HttpPost("map")]
     public async Task<IActionResult> Map(
@@ -34,7 +33,7 @@ public class MerchantsMapController(BudgetDbContext db, ILogger<MerchantsMapCont
                     Status = MerchantStatus.Mapped,
                     UpdatedAt = DateTimeOffset.UtcNow,
                 });
-                _logger.LogInformation("Created merchant {Name} with display name {DisplayName}", key, displayName);
+                logger.LogInformation("Created merchant {Name} with display name {DisplayName}", key, displayName);
             }
             else
             {
@@ -42,14 +41,14 @@ public class MerchantsMapController(BudgetDbContext db, ILogger<MerchantsMapCont
                 merchant.LogoUrl = logoUrl?.Trim();
                 merchant.Status = MerchantStatus.Mapped;
                 merchant.UpdatedAt = DateTimeOffset.UtcNow;
-                _logger.LogInformation("Updated merchant {Name}", key);
+                logger.LogInformation("Updated merchant {Name}", key);
             }
 
             await db.SaveChangesAsync(ct);
         }
         else if (key.Length > 0)
         {
-            _logger.LogWarning("Merchant map for {Name} rejected: logo URL {LogoUrl} is invalid", key, logoUrl);
+            logger.LogWarning("Merchant map for {Name} rejected: logo URL {LogoUrl} is invalid", key, logoUrl);
         }
 
         var model = await MerchantListQuery.BuildRowsPartialAsync(db, search ?? "", sort ?? "", dir ?? "", ct);

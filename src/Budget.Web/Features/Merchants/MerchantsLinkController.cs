@@ -6,9 +6,8 @@ using Microsoft.EntityFrameworkCore;
 namespace Budget.Web.Features.Merchants;
 
 [Route("merchants")]
-public class MerchantsLinkController(BudgetDbContext db, ILogger<MerchantsLinkController>? logger = null) : Controller
+public class MerchantsLinkController(BudgetDbContext db, ILogger<MerchantsLinkController> logger) : Controller
 {
-    private readonly ILogger<MerchantsLinkController> _logger = logger ?? NullLogger<MerchantsLinkController>.Instance;
 
     [HttpPost("link")]
     public async Task<IActionResult> Link(
@@ -39,7 +38,7 @@ public class MerchantsLinkController(BudgetDbContext db, ILogger<MerchantsLinkCo
                 }
 
                 await db.SaveChangesAsync(ct);
-                _logger.LogInformation("Linked name {Name} to merchant {MerchantName}", key, target.DisplayName ?? targetKey);
+                logger.LogInformation("Linked name {Name} to merchant {MerchantName}", key, target.DisplayName ?? targetKey);
             }
         }
 

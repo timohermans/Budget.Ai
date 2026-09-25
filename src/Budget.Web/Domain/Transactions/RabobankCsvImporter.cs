@@ -7,9 +7,8 @@ using Microsoft.EntityFrameworkCore;
 namespace Budget.Web.Domain.Transactions;
 
 /// <summary>Imports Rabobank CSV files into the database, skipping rows that already exist for the user.</summary>
-public sealed class RabobankCsvImporter(BudgetDbContext db, ILogger<RabobankCsvImporter>? logger = null)
+public sealed class RabobankCsvImporter(BudgetDbContext db, ILogger<RabobankCsvImporter> logger)
 {
-    private readonly ILogger<RabobankCsvImporter> _logger = logger ?? NullLogger<RabobankCsvImporter>.Instance;
 
     /// <summary>
     /// Parses the uploaded Rabobank CSV and inserts the rows that are not already present for the user.
@@ -24,7 +23,7 @@ public sealed class RabobankCsvImporter(BudgetDbContext db, ILogger<RabobankCsvI
         var maxDate = rows.Count == 0 ? DateOnly.MinValue : rows.Max(t => t.Date);
 
         if (rows.Count == 0)
-            _logger.LogWarning("Rabobank CSV for user {UserId} contained no transaction rows", userId);
+            logger.LogWarning("Rabobank CSV for user {UserId} contained no transaction rows", userId);
 
         var existing = await db.Transactions
             .Where(t => t.UserId == userId)
@@ -39,7 +38,7 @@ public sealed class RabobankCsvImporter(BudgetDbContext db, ILogger<RabobankCsvI
             await db.SaveChangesAsync(cancellationToken);
         }
 
-        _logger.LogInformation(
+        logger.LogInformation(
             "Parsed {ParsedCount} transactions for user {UserId}: {InsertedCount} inserted, {SkippedCount} duplicates skipped",
             rows.Count, userId, toAdd.Count, rows.Count - toAdd.Count);
 

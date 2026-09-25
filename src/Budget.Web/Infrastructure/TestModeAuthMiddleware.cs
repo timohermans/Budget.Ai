@@ -7,9 +7,8 @@ namespace Budget.Web.Infrastructure;
 /// Authenticates requests that carry an <c>X-Test-User</c> header as that user, bypassing OIDC entirely.
 /// Only registered in the development environment; the header value is used directly as the user id.
 /// </summary>
-public class TestModeAuthMiddleware(RequestDelegate next, ILogger<TestModeAuthMiddleware>? logger = null)
+public class TestModeAuthMiddleware(RequestDelegate next, ILogger<TestModeAuthMiddleware> logger)
 {
-    private readonly ILogger<TestModeAuthMiddleware> _logger = logger ?? NullLogger<TestModeAuthMiddleware>.Instance;
 
     /// <summary>The <see cref="HttpContext.Items"/> key that marks a request as running in test mode.</summary>
     public const string TestModeKey = "TestMode";
@@ -30,7 +29,7 @@ public class TestModeAuthMiddleware(RequestDelegate next, ILogger<TestModeAuthMi
 
             context.User = new ClaimsPrincipal(identity);
             context.Items[TestModeKey] = true;
-            _logger.LogDebug("Test-mode request authenticated as user {TestUser}", testUser);
+            logger.LogDebug("Test-mode request authenticated as user {TestUser}", testUser);
         }
 
         await next(context);
