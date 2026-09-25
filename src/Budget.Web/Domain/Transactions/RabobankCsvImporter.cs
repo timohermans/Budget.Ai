@@ -17,13 +17,16 @@ public sealed class RabobankCsvImporter(BudgetDbContext db, ILogger<RabobankCsvI
     /// <param name="userId">The id of the user the transactions belong to.</param>
     /// <param name="cancellationToken">A token to cancel the operation.</param>
     /// <returns>The most recent transaction date in the file, or <see cref="DateOnly.MinValue"/> when the file has no rows.</returns>
-    public async Task<DateOnly> ProcessAsync(Stream fileStream, string userId, CancellationToken cancellationToken)
+    public async Task<DateOnly?> ProcessAsync(Stream fileStream, string userId, CancellationToken cancellationToken)
     {
         var rows = Parse(fileStream, userId);
         var maxDate = rows.Count == 0 ? DateOnly.MinValue : rows.Max(t => t.Date);
 
         if (rows.Count == 0)
+        {
             logger.LogWarning("Rabobank CSV for user {UserId} contained no transaction rows", userId);
+            return null;
+        }
 
         var existing = await db.Transactions
             .Where(t => t.UserId == userId)

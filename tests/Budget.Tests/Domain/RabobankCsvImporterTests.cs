@@ -133,7 +133,7 @@ public class RabobankCsvImporterTests
     }
 
     [TestMethod]
-    public async Task ProcessAsync_WhenOnlyHeader_ThenReturnsMinDateAndInsertsNothing()
+    public async Task ProcessAsync_WhenOnlyHeader_ThenReturnsNullAndInsertsNothing()
     {
         var options = new DbContextOptionsBuilder<BudgetDbContext>()
             .UseInMemoryDatabase(Guid.NewGuid().ToString())
@@ -144,7 +144,7 @@ public class RabobankCsvImporterTests
         using var stream = Stream(Header);
         var maxDate = await importer.ProcessAsync(stream, "user-1", CancellationToken.None);
 
-        Assert.AreEqual(DateOnly.MinValue, maxDate);
+        Assert.IsNull(maxDate);
         Assert.IsEmpty(await db.Transactions.ToListAsync());
     }
 

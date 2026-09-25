@@ -28,10 +28,17 @@ public class UploadController(RabobankCsvImporter importer, ILogger<UploadContro
         {
             await using var stream = file.OpenReadStream();
             var maxDate = await importer.ProcessAsync(stream, userId, ct);
+            if (maxDate is null)
+            {
+                logger.LogInformation(
+                    "Imported Rabobank CSV {FileName} ({FileSize} bytes) for user {UserId}; No records; Redirecting to Budget",
+                    file.FileName, file.Length, userId);
+                return Redirect($"/budget");
+            }
             logger.LogInformation(
                 "Imported Rabobank CSV {FileName} ({FileSize} bytes) for user {UserId}; redirecting to {Year}-{Month:00}",
-                file.FileName, file.Length, userId, maxDate.Year, maxDate.Month);
-            return Redirect($"/budget/{maxDate.Year}/{maxDate.Month}");
+                file.FileName, file.Length, userId, maxDate?.Year, maxDate?.Month);
+            return Redirect($"/budget/{maxDate?.Year}/{maxDate?.Month}");
         }
         catch (Exception ex)
         {
