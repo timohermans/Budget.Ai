@@ -13,7 +13,7 @@ namespace Budget.Tests.Features;
 public class OverviewControllerTests
 {
     private const int Year = 2026;
-    private const int Month = 1;
+    private const int Month = 10;
     private const string UserId = "user-1";
 
     private static BudgetDbContext NewDb() => new(
@@ -196,11 +196,11 @@ public class OverviewControllerTests
     public async Task Index_WhenSortHoogsteUitgaves_ThenOrdersExpensesLargestFirst()
     {
         await using var db = NewDb();
-        await AddTransactionAsync(db, "Salaris", new(Year, 1, 5), 1, 1000m);
-        await AddTransactionAsync(db, "Huur", new(Year, 1, 6), 2, -450m);
-        await AddTransactionAsync(db, "Albert Heijn", new(Year, 1, 7), 3, -50m);
-        await AddTransactionAsync(db, "Bol.com", new(Year, 1, 8), 4, -3.50m);
-        await AddTransactionAsync(db, "Terugbetaling", new(Year, 1, 9), 5, 25m);
+        await AddTransactionAsync(db, "Salaris", new(Year, Month, 5), 1, 1000m);
+        await AddTransactionAsync(db, "Huur", new(Year, Month, 6), 2, -450m);
+        await AddTransactionAsync(db, "Albert Heijn", new(Year, Month, 7), 3, -50m);
+        await AddTransactionAsync(db, "Bol.com", new(Year, Month, 8), 4, -3.50m);
+        await AddTransactionAsync(db, "Terugbetaling", new(Year, Month, 9), 5, 25m);
 
         var summary = await GetSummaryAsync(NewController(db), "hoogste-uitgaves");
 
@@ -212,11 +212,11 @@ public class OverviewControllerTests
     public async Task Index_WhenSortKleinsteUitgaves_ThenOrdersExpensesSmallestFirst()
     {
         await using var db = NewDb();
-        await AddTransactionAsync(db, "Salaris", new(Year, 1, 5), 1, 1000m);
-        await AddTransactionAsync(db, "Huur", new(Year, 1, 6), 2, -450m);
-        await AddTransactionAsync(db, "Albert Heijn", new(Year, 1, 7), 3, -50m);
-        await AddTransactionAsync(db, "Bol.com", new(Year, 1, 8), 4, -3.50m);
-        await AddTransactionAsync(db, "Terugbetaling", new(Year, 1, 9), 5, 25m);
+        await AddTransactionAsync(db, "Salaris", new(Year, Month, 5), 1, 1000m);
+        await AddTransactionAsync(db, "Huur", new(Year, Month, 6), 2, -450m);
+        await AddTransactionAsync(db, "Albert Heijn", new(Year, Month, 7), 3, -50m);
+        await AddTransactionAsync(db, "Bol.com", new(Year, Month, 8), 4, -3.50m);
+        await AddTransactionAsync(db, "Terugbetaling", new(Year, Month, 9), 5, 25m);
 
         var summary = await GetSummaryAsync(NewController(db), "kleinste-uitgaves");
 
@@ -228,9 +228,9 @@ public class OverviewControllerTests
     public async Task Index_WhenSortHoogsteUitgaves_ThenAlsoOrdersWeekTransactionLists()
     {
         await using var db = NewDb();
-        await AddTransactionAsync(db, "Salaris", new(Year, 1, 5), 1, 1000m);
-        await AddTransactionAsync(db, "Huur", new(Year, 1, 6), 2, -450m);
-        await AddTransactionAsync(db, "Albert Heijn", new(Year, 1, 7), 3, -50m);
+        await AddTransactionAsync(db, "Salaris", new(Year, Month, 5), 1, 1000m);
+        await AddTransactionAsync(db, "Huur", new(Year, Month, 6), 2, -450m);
+        await AddTransactionAsync(db, "Albert Heijn", new(Year, Month, 7), 3, -50m);
 
         var summary = await GetSummaryAsync(NewController(db), "hoogste-uitgaves");
 
@@ -242,9 +242,9 @@ public class OverviewControllerTests
     public async Task Index_WhenSortWinkelAZ_ThenOrdersByNameCaseInsensitive()
     {
         await using var db = NewDb();
-        await AddTransactionAsync(db, "banana", new(Year, 1, 5), 1, -10m);
-        await AddTransactionAsync(db, "Apple", new(Year, 1, 6), 2, -10m);
-        await AddTransactionAsync(db, "zara", new(Year, 1, 7), 3, -10m);
+        await AddTransactionAsync(db, "banana", new(Year, Month, 5), 1, -10m);
+        await AddTransactionAsync(db, "Apple", new(Year, Month, 6), 2, -10m);
+        await AddTransactionAsync(db, "zara", new(Year, Month, 7), 3, -10m);
 
         var asc = await GetSummaryAsync(NewController(db), "winkel-a-z");
         var desc = await GetSummaryAsync(NewController(db), "winkel-z-a");
@@ -260,8 +260,8 @@ public class OverviewControllerTests
     public async Task Index_WhenSortWinkel_ThenUsesDisplayNameWhenLinked()
     {
         await using var db = NewDb();
-        await AddTransactionAsync(db, "bb", new(Year, 1, 5), 1, -10m);
-        await AddTransactionAsync(db, "Apple", new(Year, 1, 6), 2, -10m);
+        await AddTransactionAsync(db, "bb", new(Year, Month, 5), 1, -10m);
+        await AddTransactionAsync(db, "Apple", new(Year, Month, 6), 2, -10m);
         db.Merchants.Add(new Merchant
         {
             NameNormalized = "bb",
@@ -281,40 +281,40 @@ public class OverviewControllerTests
     public async Task Index_WhenSortHasEqualAmounts_ThenTiesBreakByDateDescending()
     {
         await using var db = NewDb();
-        await AddTransactionAsync(db, "Albert Heijn", new(Year, 1, 5), 1, -10m);
-        await AddTransactionAsync(db, "Jumbo", new(Year, 1, 6), 2, -10m);
+        await AddTransactionAsync(db, "Albert Heijn", new(Year, Month, 5), 1, -10m);
+        await AddTransactionAsync(db, "Jumbo", new(Year, Month, 6), 2, -10m);
 
         var summary = await GetSummaryAsync(NewController(db), "hoogste-uitgaves");
 
         var dates = summary.IbanBalances.Values.Single().Transactions.Select(t => t.Date).ToList();
-        CollectionAssert.AreEqual(new List<DateOnly> { new(Year, 1, 6), new(Year, 1, 5) }, dates);
+        CollectionAssert.AreEqual(new List<DateOnly> { new(Year, Month, 6), new(Year, Month, 5) }, dates);
     }
 
     [TestMethod]
     public async Task Index_WhenSortIsInvalid_ThenFallsBackToDateDescending()
     {
         await using var db = NewDb();
-        await AddTransactionAsync(db, "Jan 3", new(Year, 1, 3), 1, -10m);
-        await AddTransactionAsync(db, "Jan 7", new(Year, 1, 7), 2, -20m);
-        await AddTransactionAsync(db, "Jan 12", new(Year, 1, 12), 3, -30m);
+        await AddTransactionAsync(db, "Tx 3", new(Year, Month, 3), 1, -10m);
+        await AddTransactionAsync(db, "Tx 7", new(Year, Month, 7), 2, -20m);
+        await AddTransactionAsync(db, "Tx 12", new(Year, Month, 12), 3, -30m);
 
         var summary = await GetSummaryAsync(NewController(db), "garbage");
 
         var dates = summary.IbanBalances.Values.Single().Transactions.Select(t => t.Date).ToList();
-        CollectionAssert.AreEqual(new List<DateOnly> { new(Year, 1, 12), new(Year, 1, 7), new(Year, 1, 3) }, dates);
+        CollectionAssert.AreEqual(new List<DateOnly> { new(Year, Month, 12), new(Year, Month, 7), new(Year, Month, 3) }, dates);
     }
 
     [TestMethod]
     public async Task Index_WhenSortDateAsc_ThenOrdersByDateAscending()
     {
         await using var db = NewDb();
-        await AddTransactionAsync(db, "Jan 3", new(Year, 1, 3), 1, -10m);
-        await AddTransactionAsync(db, "Jan 7", new(Year, 1, 7), 2, -20m);
-        await AddTransactionAsync(db, "Jan 12", new(Year, 1, 12), 3, -30m);
+        await AddTransactionAsync(db, "Tx 3", new(Year, Month, 3), 1, -10m);
+        await AddTransactionAsync(db, "Tx 7", new(Year, Month, 7), 2, -20m);
+        await AddTransactionAsync(db, "Tx 12", new(Year, Month, 12), 3, -30m);
 
         var summary = await GetSummaryAsync(NewController(db), "datum-begin-eind");
 
         var dates = summary.IbanBalances.Values.Single().Transactions.Select(t => t.Date).ToList();
-        CollectionAssert.AreEqual(new List<DateOnly> { new(Year, 1, 3), new(Year, 1, 7), new(Year, 1, 12) }, dates);
+        CollectionAssert.AreEqual(new List<DateOnly> { new(Year, Month, 3), new(Year, Month, 7), new(Year, Month, 12) }, dates);
     }
 }
