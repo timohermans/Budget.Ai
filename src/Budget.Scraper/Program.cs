@@ -1,6 +1,12 @@
 ﻿using Budget.Scraper;
 using Microsoft.Playwright;
 
+var logPath = Environment.GetEnvironmentVariable("BANKING_LOG_PATH")
+    ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "dev/logs/budget.scraper.log");
+Directory.CreateDirectory(Path.GetDirectoryName(logPath)!);
+Console.SetOut(new TimestampedLogWriter(logPath, Console.Out));
+Console.SetError(new TimestampedLogWriter(logPath, Console.Error));
+
 Console.WriteLine("============== Starting run =============");
 
 var browserPath = Environment.GetEnvironmentVariable("BANKING_BROWSER_PATH")
@@ -8,7 +14,7 @@ var browserPath = Environment.GetEnvironmentVariable("BANKING_BROWSER_PATH")
 var cdpPort = Environment.GetEnvironmentVariable("BANKING_CDP_PORT") ?? "9222";
 var profileDirectory = Environment.GetEnvironmentVariable("BANKING_PROFILE_DIRECTORY");
 
-var brave = new BraveBrowser(browserPath, cdpPort, profileDirectory);
+await using var brave = new BraveBrowser(browserPath, cdpPort, profileDirectory);
 var browser = await brave.LaunchOrConnectAsync();
 if (browser is null)
 {

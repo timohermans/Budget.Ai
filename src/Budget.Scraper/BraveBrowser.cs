@@ -3,13 +3,16 @@ using Microsoft.Playwright;
 
 namespace Budget.Scraper;
 
-public class BraveBrowser
+public class BraveBrowser : IAsyncDisposable
 {
     private const string ProcessName = "Brave Browser";
 
     private readonly string _browserPath;
     private readonly string _cdpPort;
     private readonly string? _profileDirectory;
+    private IPlaywright? _playwright;
+    private Process? _process = null;
+    private static Process? _process2 = null;
 
     public BraveBrowser(string browserPath, string cdpPort, string? profileDirectory)
     {
@@ -20,13 +23,15 @@ public class BraveBrowser
 
     public string CdpUrl => $"http://127.0.0.1:{_cdpPort}";
 
+    public bool LaunchedBrave { get; private set; }
+
     public async Task<IBrowser?> LaunchOrConnectAsync()
     {
-        var playwright = await Playwright.CreateAsync();
+        _playwright ??= await Playwright.CreateAsync();
 
         if (await IsCdpUpAsync())
         {
-            return await playwright.Chromium.ConnectOverCDPAsync(CdpUrl);
+            return await _playwright.Chromium.ConnectOverCDPAsync(CdpUrl);
         }
 
         await ForceCloseIfRunningAsync();
@@ -46,18 +51,11 @@ public class BraveBrowser
             return null;
         }
 
-        return await playwright.Chromium.ConnectOverCDPAsync(CdpUrl);
+        return await _playwright.Chromium.ConnectOverCDPAsync(CdpUrl);
     }
 
-    private async Task ForceCloseIfRunningAsync()
+    public async Task QuitAsync()
     {
-        if (Process.GetProcessesByName(ProcessName).Length == 0)
-        {
-            return;
-        }
-
-        Console.WriteLine("Brave is running without the debugging port — closing it first.");
-
         RunProcess("/usr/bin/osascript", "-e", "quit app \"Brave Browser\"");
         if (await WaitUntilClosedAsync(20))
         {
@@ -72,6 +70,36 @@ public class BraveBrowser
 
         RunProcess("/usr/bin/pkill", "-9", "-x", ProcessName);
         await WaitUntilClosedAsync(10);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        _process?.Dispose();
+        _process2?.Dispose();
+        if (_playwright is null)
+        {
+            return;
+        }
+
+        if (_playwright is IAsyncDisposable asyncDisposable)
+        {
+            await asyncDisposable.DisposeAsync();
+        }
+        else if (_playwright is IDisposable disposable)
+        {
+            disposable.Dispose();
+        }
+    }
+
+    private async Task ForceCloseIfRunningAsync()
+    {
+        if (Process.GetProcessesByName(ProcessName).Length == 0)
+        {
+            return;
+        }
+
+        Console.WriteLine("Brave is running without the debugging port — closing it first.");
+        await QuitAsync();
     }
 
     private async Task<bool> WaitUntilClosedAsync(int attempts)
@@ -96,11 +124,14 @@ public class BraveBrowser
             info.ArgumentList.Add(argument);
         }
 
-        Process.Start(info);
+        var process2 = Process.Start(info);
+        _process2 = process2;
     }
 
     private void StartBrave()
     {
+        LaunchedBrave = true;
+
         var info = new ProcessStartInfo(_browserPath) { UseShellExecute = false };
         info.ArgumentList.Add($"--remote-debugging-port={_cdpPort}");
         if (_profileDirectory is not null)
@@ -109,7 +140,8 @@ public class BraveBrowser
             info.ArgumentList.Add(_profileDirectory);
         }
 
-        Process.Start(info);
+        var process = Process.Start(info);
+        _process = process;
     }
 
     private async Task<bool> IsCdpUpAsync()

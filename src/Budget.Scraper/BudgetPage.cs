@@ -19,7 +19,7 @@ public class BudgetPage
 
     public async Task LoginAsync()
     {
-        await _page.Locator("#username").FillAsync(Environment.GetEnvironmentVariable("USERNAME") ?? "no username");
+        await _page.Locator("#username").FillAsync(Environment.GetEnvironmentVariable("USERNAME") ?? "no username", new LocatorFillOptions { Timeout = 5000 });
         await _page.Locator("#password").FillAsync(Environment.GetEnvironmentVariable("PASSWORD") ?? "no password");
         await _page.Locator("#kc-login").ClickAsync();
         await Assertions.Expect(UploadButton()).ToBeVisibleAsync();
