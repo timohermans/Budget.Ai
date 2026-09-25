@@ -27,9 +27,9 @@ public class OverviewController(BudgetDbContext db) : Controller
     public async Task<IActionResult> Index(int year, int month, string? weekOrIban, string? @fixed, string? sort, CancellationToken ct)
     {
         var today = DateOnly.FromDateTime(DateTime.Today);
-        if (year == 0)
+        if (year <= 1)
             year = today.Year;
-        if (month == 0)
+        if (month <= 1)
             month = today.Month;
 
         var week = 0;
