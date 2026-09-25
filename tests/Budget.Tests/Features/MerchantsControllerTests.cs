@@ -5,6 +5,7 @@ using Budget.Web.Features.Merchants;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Budget.Tests.Features;
 

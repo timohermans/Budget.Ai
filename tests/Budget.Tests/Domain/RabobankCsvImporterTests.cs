@@ -3,6 +3,7 @@ using Budget.Web.Data;
 using Budget.Web.Domain.Transactions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Budget.Tests.Domain;
 
