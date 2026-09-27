@@ -1,29 +1,83 @@
 using System.Diagnostics;
 using Microsoft.Playwright;
+using Serilog;
 
 namespace Budget.Scraper;
 
-public class BraveBrowser : IAsyncDisposable
+public class ChromeBrowser : IAsyncDisposable
 {
-    private const string ProcessName = "Brave Browser";
+    private const string ProcessName = "Google Chrome";
 
     private readonly string _browserPath;
     private readonly string _cdpPort;
-    private readonly string? _profileDirectory;
     private IPlaywright? _playwright;
     private Process? _process = null;
     private static Process? _process2 = null;
 
-    public BraveBrowser(string browserPath, string cdpPort, string? profileDirectory)
+    public ChromeBrowser(string browserPath, string cdpPort)
     {
         _browserPath = browserPath;
         _cdpPort = cdpPort;
-        _profileDirectory = profileDirectory;
     }
 
     public string CdpUrl => $"http://127.0.0.1:{_cdpPort}";
 
-    public bool LaunchedBrave { get; private set; }
+    private static string UserDataDir =>
+        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+            ".budget-scraper-chrome");
+
+    private static string DefaultChromeUserDataDir =>
+        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+            "Library", "Application Support", "Google", "Chrome");
+
+    private static readonly string[] ExcludedDirNames =
+    [
+        "Cache", "Code Cache", "GPUCache", "GrShaderCache", "ShaderCache",
+        "Service Worker", "Crashpad", "SafetyNet", "Download Service"
+    ];
+
+    private static void EnsureUserDataDir()
+    {
+        if (Directory.Exists(UserDataDir) && File.GetAttributes(UserDataDir).HasFlag(FileAttributes.ReparsePoint))
+        {
+            Directory.Delete(UserDataDir);
+        }
+
+        if (Directory.Exists(UserDataDir))
+        {
+            return;
+        }
+
+        Log.Information("Copying Chrome profile to {Target} (one-time)...", UserDataDir);
+        CopyDirectory(new DirectoryInfo(DefaultChromeUserDataDir), new DirectoryInfo(UserDataDir), top: true);
+        Log.Information("Chrome profile copied.");
+    }
+
+    private static void CopyDirectory(DirectoryInfo source, DirectoryInfo target, bool top)
+    {
+        target.Create();
+
+        foreach (var entry in source.EnumerateFileSystemInfos())
+        {
+            if (!top && entry is DirectoryInfo { Name: var name } && ExcludedDirNames.Contains(name))
+            {
+                continue;
+            }
+
+            var destination = Path.Combine(target.FullName, entry.Name);
+            switch (entry)
+            {
+                case FileInfo file:
+                    file.CopyTo(destination, overwrite: true);
+                    break;
+                case DirectoryInfo dir:
+                    CopyDirectory(dir, new DirectoryInfo(destination), top: false);
+                    break;
+            }
+        }
+    }
+
+    public bool LaunchedChrome { get; private set; }
 
     public async Task<IBrowser?> LaunchOrConnectAsync()
     {
@@ -31,12 +85,13 @@ public class BraveBrowser : IAsyncDisposable
 
         if (await IsCdpUpAsync())
         {
+            Log.Debug("CDP is already running");
             return await _playwright.Chromium.ConnectOverCDPAsync(CdpUrl);
         }
 
         await ForceCloseIfRunningAsync();
 
-        StartBrave();
+        StartChrome();
 
         var up = false;
         for (var i = 0; i < 60 && !up; i++)
@@ -47,7 +102,7 @@ public class BraveBrowser : IAsyncDisposable
 
         if (!up)
         {
-            Console.WriteLine($"Could not reach {CdpUrl}, even after closing Brave and relaunching it with the debugging port.");
+            Log.Fatal($"Could not reach {CdpUrl}, even after closing Chrome and relaunching it with the debugging port.");
             return null;
         }
 
@@ -56,7 +111,7 @@ public class BraveBrowser : IAsyncDisposable
 
     public async Task QuitAsync()
     {
-        RunProcess("/usr/bin/osascript", "-e", "quit app \"Brave Browser\"");
+        RunProcess("/usr/bin/osascript", "-e", "quit app \"Google Chrome\"");
         if (await WaitUntilClosedAsync(20))
         {
             return;
@@ -89,6 +144,8 @@ public class BraveBrowser : IAsyncDisposable
         {
             disposable.Dispose();
         }
+
+        await QuitAsync();
     }
 
     private async Task ForceCloseIfRunningAsync()
@@ -98,8 +155,14 @@ public class BraveBrowser : IAsyncDisposable
             return;
         }
 
-        Console.WriteLine("Brave is running without the debugging port — closing it first.");
+        Log.Fatal("Chrome is running without the debugging port — closing it first.");
         await QuitAsync();
+
+        if (Process.GetProcessesByName(ProcessName).Length > 0)
+        {
+            Log.Fatal("Chrome did not fully quit; not launching a new instance.");
+            throw new InvalidOperationException("Chrome did not quit.");
+        }
     }
 
     private async Task<bool> WaitUntilClosedAsync(int attempts)
@@ -128,17 +191,14 @@ public class BraveBrowser : IAsyncDisposable
         _process2 = process2;
     }
 
-    private void StartBrave()
+    private void StartChrome()
     {
-        LaunchedBrave = true;
+        LaunchedChrome = true;
+        EnsureUserDataDir();
 
         var info = new ProcessStartInfo(_browserPath) { UseShellExecute = false };
         info.ArgumentList.Add($"--remote-debugging-port={_cdpPort}");
-        if (_profileDirectory is not null)
-        {
-            info.ArgumentList.Add("--profile-directory");
-            info.ArgumentList.Add(_profileDirectory);
-        }
+        info.ArgumentList.Add($"--user-data-dir={UserDataDir}");
 
         var process = Process.Start(info);
         _process = process;

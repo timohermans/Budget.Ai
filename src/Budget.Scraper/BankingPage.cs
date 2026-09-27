@@ -1,4 +1,5 @@
 using Microsoft.Playwright;
+using Serilog;
 
 namespace Budget.Scraper;
 
@@ -14,6 +15,18 @@ public class BankingPage
     public async Task GotoAsync()
     {
         await _page.GotoAsync("https://bankieren.rabobank.nl/welcome");
+    }
+
+    public async Task LoginAsync()
+    {
+        try
+        {
+            await CodeInput().FillAsync(Environment.GetEnvironmentVariable("BANKING_LOGIN_CODE") ?? "", new LocatorFillOptions { Timeout = 5 * 1000 });
+        }
+        catch (Exception ex)
+        {
+            Log.Debug(ex, "No need to fill in code. This is normal when banking session is still live");
+        }
     }
 
     public ILocator AccountName() => _page.Locator("#account-name");
