@@ -1,5 +1,4 @@
 using System.Globalization;
-using System.Net;
 using Budget.Web.Data;
 using Budget.Web.Domain.Transactions;
 using Budget.Web.Infrastructure;
@@ -7,6 +6,7 @@ using dotenv.net;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
@@ -28,6 +28,11 @@ var connection = builder.Configuration.GetConnectionString("Budget")
 
 builder.Services.AddDbContext<BudgetDbContext>(options =>
     options.UseNpgsql(connection).UseSnakeCaseNamingConvention());
+
+var dataProtectionKeyPath = builder.Configuration.GetRequiredSection("DataProtectionKeyPath").Get<string>();
+ArgumentException.ThrowIfNullOrWhiteSpace(dataProtectionKeyPath);
+builder.Services.AddDataProtection()
+    .PersistKeysToFileSystem(new DirectoryInfo(dataProtectionKeyPath));
 
 builder.Services.AddScoped<RabobankCsvImporter>();
 
