@@ -1,7 +1,6 @@
 ﻿using System.Text.RegularExpressions;
 using Budget.Scraper;
 using Microsoft.Playwright;
-using Serilog;
 
 var logPath = Environment.GetEnvironmentVariable("BANKING_LOG_PATH")
     ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "dev/logs/budget.scraper.log");
@@ -9,11 +8,7 @@ Directory.CreateDirectory(Path.GetDirectoryName(logPath)!);
 Console.SetOut(new TimestampedLogWriter(logPath, Console.Out));
 Console.SetError(new TimestampedLogWriter(logPath, Console.Error));
 
-Log.Logger = new LoggerConfiguration()
-    .WriteTo.Console()
-     .WriteTo.Seq(Environment.GetEnvironmentVariable("SEQ_URL") ?? "", apiKey:Environment.GetEnvironmentVariable("SEQ_KEY") ?? "", controlLevelSwitch: new Serilog.Core.LoggingLevelSwitch())
-    .CreateLogger();
-
+using var loggerFactory = Log.Configure();
 Log.Information("🚀 Starting bank scrape...");
 
 try
@@ -81,10 +76,5 @@ try
 catch (Exception ex)
 {
     Log.Error(ex, "💥 Something unexpected went wrong :(");
-    Log.CloseAndFlush();
     return 1;
-}
-finally
-{
-    Log.CloseAndFlush();
 }

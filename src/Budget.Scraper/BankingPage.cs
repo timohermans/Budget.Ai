@@ -1,5 +1,4 @@
 using Microsoft.Playwright;
-using Serilog;
 
 namespace Budget.Scraper;
 

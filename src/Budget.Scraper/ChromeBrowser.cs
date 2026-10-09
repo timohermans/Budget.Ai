@@ -1,6 +1,5 @@
 using System.Diagnostics;
 using Microsoft.Playwright;
-using Serilog;
 
 namespace Budget.Scraper;
 
