@@ -25,26 +25,29 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews();
 builder.Services.AddHealthChecks().AddDbContextCheck<BudgetDbContext>();
 
-builder.Logging.AddOpenTelemetry(logging =>
+var endpointString = builder.Configuration["OpenTelemetry:Endpoint"];
+if (!string.IsNullOrWhiteSpace(endpointString))
 {
-    logging.IncludeFormattedMessage = true;
-    logging.SetResourceBuilder(ResourceBuilder.CreateDefault()
-        .AddService("Budget_web")
-        .AddAttributes(new Dictionary<string, object>
-        {
-            ["environment"] = builder.Environment.EnvironmentName
-        }))
-        .AddOtlpExporter(exporter =>
-        {
-            var endpointString = builder.Configuration["OpenTelemetry:Endpoint"];
-            var headers = builder.Configuration["OpenTelemetry:Headers"];
-            ArgumentException.ThrowIfNullOrWhiteSpace(endpointString);
-            ArgumentException.ThrowIfNullOrWhiteSpace(headers);
-            exporter.Endpoint = new Uri(endpointString);
-            exporter.Headers = headers;
-            exporter.Protocol = OtlpExportProtocol.HttpProtobuf;
-        });
-});
+    builder.Logging.AddOpenTelemetry(logging =>
+    {
+        logging.IncludeFormattedMessage = true;
+        logging.SetResourceBuilder(ResourceBuilder.CreateDefault()
+            .AddService("Budget_web")
+            .AddAttributes(new Dictionary<string, object>
+            {
+                ["environment"] = builder.Environment.EnvironmentName
+            }))
+            .AddOtlpExporter(exporter =>
+            {
+                var headers = builder.Configuration["OpenTelemetry:Headers"];
+                ArgumentException.ThrowIfNullOrWhiteSpace(endpointString);
+                ArgumentException.ThrowIfNullOrWhiteSpace(headers);
+                exporter.Endpoint = new Uri(endpointString);
+                exporter.Headers = headers;
+                exporter.Protocol = OtlpExportProtocol.HttpProtobuf;
+            });
+    });
+}
 
 var connection = builder.Configuration.GetConnectionString("Budget")
     ?? Environment.GetEnvironmentVariable("BUDGET_DB_CONNECTION") // TODO: Deze kan eigenlijk weg
