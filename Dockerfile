@@ -17,6 +17,8 @@ RUN dotnet publish src/Budget.Web/Budget.Web.csproj \
 FROM mcr.microsoft.com/dotnet/aspnet:10.0-alpine AS final
 WORKDIR /app
 
+RUN apk add --no-cache krb5-libs
+
 ENV ASPNETCORE_HTTP_PORTS=8080
 
 COPY --from=build /app/publish .

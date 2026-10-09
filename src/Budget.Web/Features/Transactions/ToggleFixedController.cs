@@ -9,7 +9,7 @@ namespace Budget.Web.Features.Transactions;
 
 /// <summary>Handles toggling the fixed status of a transaction.</summary>
 [Route("transactions")]
-public class ToggleFixedController(BudgetDbContext db) : Controller
+public class ToggleFixedController(BudgetDbContext db, ILogger<ToggleFixedController> logger) : Controller
 {
     /// <summary>
     /// Toggles the transaction's fixed status and returns the updated toggle fragment with out-of-band
@@ -25,10 +25,15 @@ public class ToggleFixedController(BudgetDbContext db) : Controller
         var transaction = await db.Transactions
             .SingleOrDefaultAsync(t => t.Id == id && t.UserId == userId, ct);
         if (transaction is null)
+        {
+            logger.LogWarning("Toggle-fixed for transaction {TransactionId} rejected: not found for user {UserId}", id, userId);
             return NotFound();
+        }
 
         transaction.IsNotFixed = !transaction.IsNotFixed;
         await db.SaveChangesAsync(ct);
+        logger.LogInformation("Toggled transaction {TransactionId} for user {UserId}: IsNotFixed={IsNotFixed}",
+            transaction.Id, userId, transaction.IsNotFixed);
 
         var ownIbans = await db.Transactions
             .Where(t => t.UserId == userId)

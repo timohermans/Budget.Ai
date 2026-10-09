@@ -11,7 +11,10 @@ using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
-
+using Npgsql;
+using OpenTelemetry.Exporter;
+using OpenTelemetry.Logs;
+using OpenTelemetry.Resources;
 CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
 CultureInfo.DefaultThreadCurrentUICulture = CultureInfo.InvariantCulture;
 
@@ -21,6 +24,27 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllersWithViews();
 builder.Services.AddHealthChecks().AddDbContextCheck<BudgetDbContext>();
+
+builder.Logging.AddOpenTelemetry(logging =>
+{
+    logging.IncludeFormattedMessage = true;
+    logging.SetResourceBuilder(ResourceBuilder.CreateDefault()
+        .AddService("Budget_web")
+        .AddAttributes(new Dictionary<string, object>
+        {
+            ["environment"] = builder.Environment.EnvironmentName
+        }))
+        .AddOtlpExporter(exporter =>
+        {
+            var endpointString = builder.Configuration["OpenTelemetry:Endpoint"];
+            var headers = builder.Configuration["OpenTelemetry:Headers"];
+            ArgumentException.ThrowIfNullOrWhiteSpace(endpointString);
+            ArgumentException.ThrowIfNullOrWhiteSpace(headers);
+            exporter.Endpoint = new Uri(endpointString);
+            exporter.Headers = headers;
+            exporter.Protocol = OtlpExportProtocol.HttpProtobuf;
+        });
+});
 
 var connection = builder.Configuration.GetConnectionString("Budget")
     ?? Environment.GetEnvironmentVariable("BUDGET_DB_CONNECTION") // TODO: Deze kan eigenlijk weg
@@ -120,6 +144,8 @@ app.Use(async (context, next) =>
     if (context.Request.Headers.ContainsKey("HX-Request")
         && !(context.User.Identity?.IsAuthenticated ?? false))
     {
+        context.RequestServices.GetRequiredService<ILogger<Program>>()
+            .LogDebug("Unauthorized htmx request for {Path}; returning 401", context.Request.Path);
         context.Response.StatusCode = StatusCodes.Status401Unauthorized;
         return;
     }
@@ -134,5 +160,12 @@ app.MapHealthChecks("/health/live", new HealthCheckOptions { Predicate = _ => fa
 app.MapHealthChecks("/health/ready", new HealthCheckOptions { Predicate = _ => true }).AllowAnonymous();
 
 app.MapGet("/", () => Results.Redirect("/budget"));
+
+var dbConnectionInfo = new NpgsqlConnectionStringBuilder(connection);
+app.Logger.LogInformation(
+    "Budget.Web starting in {Environment}; auth mode: {AuthMode}; database: {DbHost}/{DbDatabase} as {DbUsername}",
+    app.Environment.EnvironmentName,
+    string.IsNullOrEmpty(oidcAuthority) ? "cookie-only" : "oidc",
+    dbConnectionInfo.Host, dbConnectionInfo.Database, dbConnectionInfo.Username);
 
 app.Run();
