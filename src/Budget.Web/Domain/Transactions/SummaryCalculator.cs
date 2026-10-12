@@ -115,7 +115,7 @@ public static class SummaryCalculator
         foreach (var week in summary.Weeks.Values)
         {
             week.Budget = summary.Budget / daysInMonth * datesPerWeek[week.WeekNumber];
-            week.Left = Math.Abs(week.Budget) - Math.Abs(week.Spent);
+            week.Left = week.Budget - week.Spent;
         }
 
         return summary;

@@ -84,6 +84,22 @@ public class SummaryCalculatorTests
     }
 
     [TestMethod]
+    public void Calculate_WhenPositiveVariableTransactionInWeek_ThenWeekLeftIncreases()
+    {
+        var transactions = new[]
+        {
+            Transaction(1, 3000m, LastMonth.AddDays(14), "sb", "Employer", MainIban, OtherIban),
+            Transaction(2, -800m, LastMonth.AddDays(14), "cb", "Insurance Co", MainIban, OtherIban),
+            Transaction(3, 50m, FirstDay.AddDays(2), "bc", "Refund Shop", MainIban, OtherIban),
+        };
+
+        var summary = Calculate(transactions);
+
+        Assert.AreEqual(-50m, summary.Weeks[1].Spent, "Positive variable transaction should reduce spent");
+        Assert.AreEqual(333.87m, Rounded2(summary.Weeks[1].Left), "Week Left should be budget plus the refund");
+    }
+
+    [TestMethod]
     public void Calculate_WhenFixedIncomeFromLastMonth_ThenCounted()
     {
         var transactions = new[]
