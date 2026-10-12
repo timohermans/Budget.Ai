@@ -42,7 +42,7 @@ public class MerchantsLinkController(BudgetDbContext db, ILogger<MerchantsLinkCo
             }
         }
 
-        var model = await MerchantListQuery.BuildRowsPartialAsync(db, search ?? "", sort ?? "", dir ?? "", ct);
+        var model = await MerchantRowsQuery.BuildRowsPartialAsync(db, search ?? "", sort ?? "", dir ?? "", ct);
         return PartialView("~/Views/Merchants/_Rows.cshtml", model);
     }
 }

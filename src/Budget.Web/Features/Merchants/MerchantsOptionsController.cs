@@ -30,7 +30,7 @@ public class MerchantsOptionsController(BudgetDbContext db) : Controller
     public async Task<IActionResult> Options(
         string name, string q, string search, string sort, string dir, CancellationToken ct)
     {
-        var options = await MerchantListQuery.GetOptionsAsync(db, q, ct);
+        var options = await MerchantOptionsQuery.GetOptionsAsync(db, q, ct);
         return PartialView("~/Views/Merchants/_Options.cshtml", new OptionsPartialModel
         {
             Name = name ?? "",

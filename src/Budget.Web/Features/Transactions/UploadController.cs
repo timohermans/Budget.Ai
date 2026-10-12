@@ -1,4 +1,3 @@
-using Budget.Web.Domain.Transactions;
 using Budget.Web.Infrastructure;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;

@@ -51,7 +51,7 @@ public class MerchantsMapController(BudgetDbContext db, ILogger<MerchantsMapCont
             logger.LogWarning("Merchant map for {Name} rejected: logo URL {LogoUrl} is invalid", key, logoUrl);
         }
 
-        var model = await MerchantListQuery.BuildRowsPartialAsync(db, search ?? "", sort ?? "", dir ?? "", ct);
+        var model = await MerchantRowsQuery.BuildRowsPartialAsync(db, search ?? "", sort ?? "", dir ?? "", ct);
         return PartialView("~/Views/Merchants/_Rows.cshtml", model);
     }
 }

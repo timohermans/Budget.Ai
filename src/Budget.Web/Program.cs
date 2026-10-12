@@ -1,6 +1,6 @@
 using System.Globalization;
 using Budget.Web.Data;
-using Budget.Web.Domain.Transactions;
+using Budget.Web.Features.Transactions;
 using Budget.Web.Infrastructure;
 using dotenv.net;
 using Microsoft.AspNetCore.Authentication.Cookies;

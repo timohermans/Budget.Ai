@@ -15,8 +15,8 @@ public class MerchantsIndexController(BudgetDbContext db) : Controller
     [Route("")]
     public async Task<IActionResult> Index(CancellationToken ct)
     {
-        var rows = await MerchantListQuery.GetRowsAsync(db, "", "", "", ct);
-        var recentOptions = await MerchantListQuery.GetOptionsAsync(db, null, ct);
+        var rows = await MerchantRowsQuery.GetRowsAsync(db, "", "", "", ct);
+        var recentOptions = await MerchantOptionsQuery.GetOptionsAsync(db, null, ct);
         return View("~/Views/Merchants/Index.cshtml", new MerchantsViewModel { Rows = rows, RecentOptions = recentOptions });
     }
 }

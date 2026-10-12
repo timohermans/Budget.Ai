@@ -4,8 +4,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Budget.Web.Features.Merchants;
 
-/// <summary>Shared queries for the merchant admin page controllers: the rows list and the link-picker options.</summary>
-public static class MerchantListQuery
+/// <summary>Shared query for the merchant admin rows list, used by the page and the htmx row swaps.</summary>
+public static class MerchantRowsQuery
 {
     public static async Task<List<MerchantRowModel>> GetRowsAsync(
         BudgetDbContext db, string search, string sort, string dir, CancellationToken ct)
@@ -85,50 +85,12 @@ public static class MerchantListQuery
         return rows;
     }
 
-    public static async Task<List<MerchantOptionModel>> GetOptionsAsync(
-        BudgetDbContext db, string? q, CancellationToken ct)
-    {
-        var query = q?.Trim().ToLowerInvariant();
-
-        var merchants = await db
-            .Merchants
-            .Select(m => new
-            {
-                m.NameNormalized,
-                m.DisplayName,
-                m.UpdatedAt,
-                LastLinked = m.Aliases.Select(a => (DateTimeOffset?)a.CreatedAt).Max(),
-                Aliases = m.Aliases.Select(a => a.NameNormalized)
-            })
-            .Where(m => query == null || m.DisplayName.ToLower().Contains(query))
-            .ToListAsync();
-        
-        var transactionsByName = await db
-            .Transactions
-            .Select(t => t.NameOtherPartyNormalized)
-            .ToListAsync();
-
-        var result = merchants.Select(m => new MerchantOptionModel
-        {
-            NameNormalized = m.NameNormalized,
-            Label = m.DisplayName,
-            LastLinked = m.UpdatedAt > m.LastLinked.GetValueOrDefault(DateTimeOffset.MinValue) ? m.UpdatedAt : m.LastLinked,
-            TotalTransactions = transactionsByName.Count(t => t == m.NameNormalized || m.Aliases.Contains(t)),
-        })
-        .OrderByDescending(o => o.LastLinked)
-        .ThenBy(o => o.NameNormalized)
-        .Take(5)
-        .ToList();
-
-        return result;
-    }
-
     /// <summary>Builds the rows partial for the full page render and for the htmx swaps after each action.</summary>
     public static async Task<RowsPartialModel> BuildRowsPartialAsync(
         BudgetDbContext db, string search, string sort, string dir, CancellationToken ct)
     {
         var rows = await GetRowsAsync(db, search, sort, dir, ct);
-        var recentOptions = await GetOptionsAsync(db, null, ct);
+        var recentOptions = await MerchantOptionsQuery.GetOptionsAsync(db, null, ct);
         return new RowsPartialModel
         {
             Search = search,

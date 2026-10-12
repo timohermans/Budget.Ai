@@ -1,6 +1,6 @@
 using System.Text;
 using Budget.Web.Data;
-using Budget.Web.Domain.Transactions;
+using Budget.Web.Features.Transactions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;

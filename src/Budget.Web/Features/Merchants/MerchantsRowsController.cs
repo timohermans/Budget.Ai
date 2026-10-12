@@ -34,7 +34,7 @@ public class MerchantsRowsController(BudgetDbContext db) : Controller
     [Route("rows")]
     public async Task<IActionResult> Rows(string search, string sort, string dir, CancellationToken ct)
     {
-        var model = await MerchantListQuery.BuildRowsPartialAsync(db, search ?? "", sort ?? "", dir ?? "", ct);
+        var model = await MerchantRowsQuery.BuildRowsPartialAsync(db, search ?? "", sort ?? "", dir ?? "", ct);
         return PartialView("~/Views/Merchants/_Rows.cshtml", model);
     }
 }

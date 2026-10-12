@@ -2,9 +2,10 @@ using System.Globalization;
 using System.Text;
 using Budget.Web.Data;
 using Budget.Web.Domain.Merchants;
+using Budget.Web.Domain.Transactions;
 using Microsoft.EntityFrameworkCore;
 
-namespace Budget.Web.Domain.Transactions;
+namespace Budget.Web.Features.Transactions;
 
 /// <summary>Imports Rabobank CSV files into the database, skipping rows that already exist for the user.</summary>
 public sealed class RabobankCsvImporter(BudgetDbContext db, ILogger<RabobankCsvImporter> logger)

@@ -40,7 +40,7 @@ public class MerchantsClearController(BudgetDbContext db, ILogger<MerchantsClear
             await db.SaveChangesAsync(ct);
         }
 
-        var model = await MerchantListQuery.BuildRowsPartialAsync(db, search ?? "", sort ?? "", dir ?? "", ct);
+        var model = await MerchantRowsQuery.BuildRowsPartialAsync(db, search ?? "", sort ?? "", dir ?? "", ct);
         return PartialView("~/Views/Merchants/_Rows.cshtml", model);
     }
 }
