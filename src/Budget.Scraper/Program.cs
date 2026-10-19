@@ -17,6 +17,11 @@ try
         ?? "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
     var cdpPort = Environment.GetEnvironmentVariable("BANKING_CDP_PORT") ?? "9222";
 
+    var downloadDir = Environment.GetEnvironmentVariable("DOWNLOAD_DIR")
+        ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Dev", "data", "budget-scraper");
+    Directory.CreateDirectory(downloadDir);
+    Log.Debug($"Using download directory {downloadDir}");
+
     await using var chrome = new ChromeBrowser(browserPath, cdpPort);
     await using var browser = await chrome.LaunchOrConnectAsync();
     if (browser is null)
@@ -57,6 +62,10 @@ try
     var path = await download.PathAsync();
     Log.Debug($"Path to file {fileName} is {path}");
 
+    var destination = Path.Combine(downloadDir, fileName);
+    File.Copy(path, destination, overwrite: true);
+    Log.Debug($"Copied {fileName} to {destination}");
+
     var budget = new BudgetPage(page);
     await budget.GotoAsync();
 
@@ -66,7 +75,20 @@ try
         await budget.LoginAsync();
     }
 
-    await budget.UploadAsync(fileName, path);
+    foreach (var file in Directory.EnumerateFiles(downloadDir))
+    {
+        var fileToUpload = Path.GetFileName(file);
+        try
+        {
+            await budget.UploadAsync(fileToUpload, file);
+            File.Delete(file);
+            Log.Information($"Uploaded and removed {fileToUpload}");
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, $"Failed to upload {fileToUpload}, keeping it in {downloadDir}");
+        }
+    }
 
 
     await page.CloseAsync();
