@@ -14,6 +14,3 @@ updates:
         patterns: ["xunit*", "Microsoft.NET.Test.Sdk", "coverlet.*"]
       routine:
         update-types: ["minor", "patch"]
-    ignore:
-      - dependency-name: "Microsoft.EntityFrameworkCore*"
-        update-types: ["version-update:semver-major"]
