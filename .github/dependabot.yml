@@ -1,0 +1,19 @@
+version: 2
+updates:
+  - package-ecosystem: "nuget"
+    directories: ["/", "/src", "/tests"]
+    schedule:
+      interval: "weekly"
+    cooldown:
+      semver-major-days: 30
+      semver-minor-days: 7
+    groups:
+      microsoft-family:
+        patterns: ["Microsoft.Extensions.*", "Microsoft.AspNetCore.*"]
+      test-stack:
+        patterns: ["xunit*", "Microsoft.NET.Test.Sdk", "coverlet.*"]
+      routine:
+        update-types: ["minor", "patch"]
+    ignore:
+      - dependency-name: "Microsoft.EntityFrameworkCore*"
+        update-types: ["version-update:semver-major"]
