@@ -1,0 +1,54 @@
+<div data-testid="merchant-options" data-row-name="{{ name }}">
+  <input type="hidden" name="name" value="{{ name }}" />
+  <input type="hidden" name="search" value="{{ search }}" />
+  <input type="hidden" name="sort" value="{{ sort }}" />
+  <input type="hidden" name="dir" value="{{ dir }}" />
+  <input
+    name="q"
+    type="search"
+    data-testid="merchant-options-search"
+    placeholder="Zoek merchant..."
+    value="{{ q }}"
+    hx-get="{% url 'merchants:options' %}"
+    hx-trigger="input changed delay:300ms, search"
+    hx-include="closest [data-testid=merchant-options]"
+    hx-target="closest [data-testid=merchant-options]"
+    hx-swap="outerHTML"
+  />
+
+  {% if options|length == 0 %}
+    {% if q %}
+      <div data-testid="merchant-options-empty">
+        <span>Geen match voor '{{ q }}' — maak een nieuwe merchant aan.</span>
+        <button
+          type="button"
+          data-testid="merchant-options-create"
+          class="smaller"
+          onclick="var d=this.closest('tr').querySelector('details[data-testid=merchant-map]'); if(d){d.open=true; d.scrollIntoView({block:'center'});}"
+        >
+          Nieuwe merchant
+        </button>
+      </div>
+    {% else %}
+      <span data-testid="merchant-options-empty">Nog geen merchants — map er eerst een aan.</span>
+    {% endif %}
+  {% else %}
+    <ul data-testid="merchant-options-list">
+      {% for option in options %}
+        <li>
+          <form method="post" hx-post="{% url 'merchants:link' %}" hx-target="#merchant-rows" hx-swap="outerHTML">
+            {% csrf_token %}
+            <input type="hidden" name="name" value="{{ name }}" />
+            <input type="hidden" name="merchantName" value="{{ option.name_normalized }}" />
+            <input type="hidden" name="search" value="{{ search }}" />
+            <input type="hidden" name="sort" value="{{ sort }}" />
+            <input type="hidden" name="dir" value="{{ dir }}" />
+            <button type="submit" data-testid="merchant-option" data-merchant="{{ option.name_normalized }}" class="outline smaller">
+              {{ option.label }} ({{ option.total_transactions }})
+            </button>
+          </form>
+        </li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+</div>

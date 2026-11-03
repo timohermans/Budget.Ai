@@ -1,0 +1,21 @@
+<form
+  id="toggle-{{ transaction.id }}"
+  data-testid="toggle-{{ transaction.id }}"
+  hx-target="this"
+  hx-swap="outerHTML"
+  hx-post="{% url 'transactions:toggle_fixed' %}"
+>
+  {% csrf_token %}
+
+  <input type="hidden" name="id" value="{{ transaction.id }}" />
+  <input type="hidden" name="iban" value="" />
+  <input type="hidden" name="week" value="{% if week_number %}{{ week_number }}{% endif %}" />
+
+  <button
+    type="submit"
+    data-testid="toggle-submit"
+    class="outline smaller {% if transaction.is_not_fixed %}is-not-fixed{% endif %}"
+  >
+    vast
+  </button>
+</form>

@@ -1,0 +1,26 @@
+{% load budget_extras %}
+<article class="fixed-detail-card" data-testid="fixed-detail-card">
+  <header class="fixed-detail-header">
+    <h5 data-testid="fixed-detail-title">{{ fixed_label }}</h5>
+    <a
+      role="button"
+      class="outline secondary fixed-detail-close"
+      data-testid="fixed-detail-close"
+      href="/budget/{{ year }}/{{ month }}"
+      hx-get="/budget/{{ year }}/{{ month }}"
+      hx-target="body"
+      hx-push-url="true"
+      aria-label="Sluiten"
+    >&times;</a>
+  </header>
+  {% for transaction in fixed_transactions %}
+    <div data-testid="fixed-detail-transaction" class="transaction {{ transaction.css_class }}">
+      <b class="date" data-testid="date">{{ transaction.date|date:"d-m" }}</b>
+      <div>
+        <div><span class="amount" data-testid="amount">{{ transaction.amount|money }}</span></div>
+        <i data-testid="name-other-party">{{ transaction.display_name|default:transaction.name_other_party }}</i>
+        <small>{{ transaction.description }}</small>
+      </div>
+    </div>
+  {% endfor %}
+</article>

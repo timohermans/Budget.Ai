@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section>
+  <h1>Tegenpartijen</h1>
+
+  <input
+    id="merchant-search"
+    name="search"
+    type="search"
+    data-testid="merchant-search"
+    placeholder="Zoek op naam..."
+    hx-get="{% url 'merchants:rows' %}"
+    hx-trigger="input changed delay:300ms, search"
+    hx-target="#merchant-rows"
+    hx-swap="outerHTML"
+    hx-include="this"
+  />
+
+  <table>
+    <thead>
+      <tr>
+        <th>
+          <a href="#" data-testid="sort-name" hx-get="{% url 'merchants:rows' %}" hx-vals='{"sort":"name","dir":"asc"}' hx-include="#merchant-search" hx-target="#merchant-rows" hx-swap="outerHTML">Naam</a>
+        </th>
+        <th>
+          <a href="#" data-testid="sort-count" hx-get="{% url 'merchants:rows' %}" hx-vals='{"sort":"count","dir":"desc"}' hx-include="#merchant-search" hx-target="#merchant-rows" hx-swap="outerHTML">#txn</a>
+        </th>
+        <th>
+          <a href="#" data-testid="sort-first-seen" hx-get="{% url 'merchants:rows' %}" hx-vals='{"sort":"firstSeen","dir":"desc"}' hx-include="#merchant-search" hx-target="#merchant-rows" hx-swap="outerHTML">Eerste keer</a>
+        </th>
+        <th>
+          <a href="#" data-testid="sort-status" hx-get="{% url 'merchants:rows' %}" hx-vals='{"sort":"status","dir":"asc"}' hx-include="#merchant-search" hx-target="#merchant-rows" hx-swap="outerHTML">Status</a>
+        </th>
+        <th></th>
+      </tr>
+    </thead>
+    {% include "merchants/_rows.html" %}
+  </table>
+</section>
+{% endblock %}

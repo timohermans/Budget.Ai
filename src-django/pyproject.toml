@@ -1,0 +1,64 @@
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "budget-django"
+version = "0.1.0"
+description = "Django port of the Budget.Web ASP.NET Core application"
+requires-python = ">=3.12"
+dependencies = [
+    "Django==6.1.2",
+    "psycopg[binary]>=3.3,<3.4",
+    "mozilla-django-oidc>=5.0.2,<6",
+    "python-dotenv>=1.2,<2",
+    "dj-database-url>=3.1,<4",
+    "gunicorn>=26.0,<27",
+]
+
+[project.optional-dependencies]
+dev = [
+    "django-stubs[compatible-mypy]==6.1.2",
+    "mypy>=1.18,<2",
+    "ruff>=0.14,<1",
+]
+
+[tool.setuptools]
+py-modules = ["manage"]
+
+[tool.setuptools.packages.find]
+include = ["config*", "apps*"]
+
+[tool.setuptools.package-data]
+"apps.budget" = ["templates/**/*.html"]
+"apps.merchants" = ["templates/**/*.html"]
+"apps.transactions" = ["templates/**/*.html"]
+
+[tool.mypy]
+python_version = "3.12"
+plugins = ["mypy_django_plugin.main"]
+strict = true
+warn_unused_ignores = true
+exclude = ["src-django/.venv", "migrations"]
+
+[tool.django-stubs]
+django_settings_module = "config.settings"
+
+[[tool.mypy.overrides]]
+module = ["mozilla_django_oidc.*"]
+ignore_missing_imports = true
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+exclude = [".venv"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "DJ"]
+ignore = ["B008"]
+
+[tool.ruff.lint.per-file-ignores]
+# The existing PostgreSQL columns are nullable; the models must mirror them.
+"apps/*/models.py" = ["DJ001"]
+# Generated migration files keep Django's formatted output.
+"apps/*/migrations/*.py" = ["E501"]
