@@ -45,6 +45,9 @@ Oidc__Authority=
 Oidc__ClientId=
 Oidc__ClientSecret=
 
+OpenTelemetry__Endpoint=
+OpenTelemetry__Headers=
+
 BUDGET_DEBUG=true
 BUDGET_TEST_MODE=true
 BUDGET_ALLOWED_HOSTS=localhost,127.0.0.1
@@ -148,6 +151,37 @@ The behavior mirrors the .NET app:
 Sessions use Django's signed-cookie backend with an eight-hour lifetime, so the
 test-mode session does not need a database table.
 
+## OpenTelemetry
+
+Tracing and log export are configured from the same environment variables as the
+.NET app, so one `.env` serves both:
+
+| Variable | Purpose |
+| --- | --- |
+| `OpenTelemetry__Endpoint` | OTLP/HTTP logs endpoint (e.g. `http://collector:4318/v1/logs`) |
+| `OpenTelemetry__Headers` | Collector auth header, e.g. `Authorization=Basic <base64>` |
+| `OTEL_SERVICE_NAME` | Resource `service.name` (default `budget-django`) |
+| `OTEL_ENVIRONMENT` | Resource `deployment.environment.name` (defaults to `BUDGET_ENV` or the debug state) |
+| `OTEL_EXPORTER_OTLP_ENDPOINT` | Base OTLP endpoint; `/v1/traces` and `/v1/logs` are appended |
+| `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT` | Explicit traces endpoint, overrides the base endpoint |
+| `OTEL_EXPORTER_OTLP_LOGS_ENDPOINT` | Explicit logs endpoint, overrides `OpenTelemetry__Endpoint` |
+| `OTEL_TRACES_EXPORTER` / `OTEL_LOGS_EXPORTER` | Set to `none` to disable that signal |
+| `OTEL_TRACES_SAMPLER_ARG` | Trace sample ratio, `0.0`–`1.0` (default `1.0`) |
+
+Telemetry is off while no endpoint is configured. When enabled, the app exports
+spans for HTTP requests (Django middleware) and database queries (psycopg), and
+ships the existing console log records over OTLP with trace context attached.
+`config/telemetry.py` is invoked from `config/wsgi.py` and `config/asgi.py`
+before the Django handler is created, which is required for the tracing
+middleware to be registered.
+
+Log records are exported through `config.telemetry.BudgetLoggingHandler`, which
+drops record attributes that OTel cannot represent. Django's `django.server`
+access logger passes the raw socket as `extra={"request": ...}`; exporting it
+would make the SDK emit a warning through the same handler and trip its
+recursion guard. `opentelemetry.*` loggers are also kept off the OTLP handler
+for the same reason.
+
 ## UI
 
 The templates intentionally preserve the existing UI contract: htmx 2,
@@ -204,6 +238,8 @@ docker run --rm -p 8080:8080 \
   -e BUDGET_DEBUG=false \
   -e BUDGET_SECRET_KEY=replace-me \
   -e BUDGET_ALLOWED_HOSTS=budget.example.com \
+  -e OpenTelemetry__Endpoint=http://collector:4318/v1/logs \
+  -e OpenTelemetry__Headers="Authorization=Basic <base64>" \
   budget-django
 ```
 

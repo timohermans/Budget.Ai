@@ -49,6 +49,16 @@ def _env_list(name: str, default: list[str] | None = None) -> list[str]:
     return [item.strip() for item in raw.split(",") if item.strip()]
 
 
+def _env_float(name: str, default: float) -> float:
+    raw = os.getenv(name)
+    if raw is None or raw.strip() == "":
+        return default
+    try:
+        return float(raw)
+    except ValueError:
+        return default
+
+
 def _parse_npgsql_connection_string(connection: str) -> dict[str, Any]:
     """Translate an EF/Npgsql connection string into Django database settings."""
     values: dict[str, str] = {}
@@ -202,6 +212,47 @@ if OIDC_ENABLED:
     OIDC_VERIFY_SSL = True
     OIDC_STORE_ID_TOKEN = True
 
+# --- OpenTelemetry -----------------------------------------------------------
+# Mirrors the .NET app: OpenTelemetry__Endpoint is the OTLP/HTTP logs endpoint
+# and OpenTelemetry__Headers carries the collector auth header. The standard
+# OTEL_* variables are honoured as well, so both apps can share one .env.
+OTEL_SERVICE_NAME = _env("OTEL_SERVICE_NAME", "budget-django")
+OTEL_ENVIRONMENT = (
+    _env("OTEL_ENVIRONMENT") or _env("BUDGET_ENV") or ("development" if DEBUG else "production")
+)
+OTEL_HEADERS = _env("OpenTelemetry__Headers") or _env("OTEL_EXPORTER_OTLP_HEADERS")
+OTEL_TRACES_EXPORTER = _env("OTEL_TRACES_EXPORTER", "otlp").lower()
+OTEL_LOGS_EXPORTER = _env("OTEL_LOGS_EXPORTER", "otlp").lower()
+OTEL_TRACE_SAMPLE_RATIO = min(max(_env_float("OTEL_TRACES_SAMPLER_ARG", 1.0), 0.0), 1.0)
+
+_otel_base_endpoint = _env("OTEL_EXPORTER_OTLP_ENDPOINT").rstrip("/")
+OTEL_TRACES_ENDPOINT = _env("OTEL_EXPORTER_OTLP_TRACES_ENDPOINT") or (
+    f"{_otel_base_endpoint}/v1/traces" if _otel_base_endpoint else ""
+)
+OTEL_LOGS_ENDPOINT = (
+    _env("OTEL_EXPORTER_OTLP_LOGS_ENDPOINT")
+    or _env("OpenTelemetry__Endpoint")
+    or (f"{_otel_base_endpoint}/v1/logs" if _otel_base_endpoint else "")
+)
+OTEL_TRACES_ENABLED = bool(OTEL_TRACES_ENDPOINT) and OTEL_TRACES_EXPORTER != "none"
+OTEL_LOGS_ENABLED = bool(OTEL_LOGS_ENDPOINT) and OTEL_LOGS_EXPORTER != "none"
+OTEL_ENABLED = OTEL_TRACES_ENABLED or OTEL_LOGS_ENABLED
+
+# The OTLP log handler is only registered when an endpoint is configured, so a
+# plain local run keeps logging to the console only.
+_otel_handler_names = ["otel"] if OTEL_LOGS_ENABLED else []
+_otel_handlers = (
+    {"otel": {"class": "config.telemetry.BudgetLoggingHandler"}} if OTEL_LOGS_ENABLED else {}
+)
+# OTel's own diagnostics must not be exported through the OTLP handler: a
+# warning raised while building a log record would re-enter the handler and be
+# dropped by its recursion guard.
+_otel_loggers = (
+    {"opentelemetry": {"handlers": ["console"], "level": "WARNING", "propagate": False}}
+    if OTEL_LOGS_ENABLED
+    else {}
+)
+
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
@@ -215,28 +266,34 @@ LOGGING = {
             "class": "logging.StreamHandler",
             "formatter": "default",
         },
+        **_otel_handlers,
     },
     "root": {
-        "handlers": ["console"],
+        "handlers": ["console", *_otel_handler_names],
         "level": "INFO",
     },
     "loggers": {
-        "django": {"handlers": ["console"], "level": "INFO", "propagate": False},
+        "django": {
+            "handlers": ["console", *_otel_handler_names],
+            "level": "INFO",
+            "propagate": False,
+        },
         "budget": {
-            "handlers": ["console"],
+            "handlers": ["console", *_otel_handler_names],
             "level": "DEBUG" if DEBUG else "INFO",
             "propagate": False,
         },
         "transactions": {
-            "handlers": ["console"],
+            "handlers": ["console", *_otel_handler_names],
             "level": "DEBUG" if DEBUG else "INFO",
             "propagate": False,
         },
         "merchants": {
-            "handlers": ["console"],
+            "handlers": ["console", *_otel_handler_names],
             "level": "DEBUG" if DEBUG else "INFO",
             "propagate": False,
         },
+        **_otel_loggers,
     },
 }
 
