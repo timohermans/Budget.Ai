@@ -24,8 +24,6 @@ jobs:
   build-and-test:
     name: Build & test
     runs-on: ubuntu-latest
-    container:
-      image: mcr.microsoft.com/playwright/dotnet:v1.63.0-noble
     services:
       postgres:
         image: postgres:18-alpine
@@ -33,48 +31,69 @@ jobs:
           POSTGRES_USER: budget
           POSTGRES_PASSWORD: budget
           POSTGRES_DB: budget
+        ports:
+          - 5432:5432
         options: >-
           --health-cmd "pg_isready -U budget"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+    env:
+      DATABASE_URL: postgres://budget:budget@localhost:5432/budget
+      BUDGET_DEBUG: "true"
+      BUDGET_TEST_MODE: "true"
     defaults:
       run:
         shell: bash
     steps:
       - uses: actions/checkout@v4
 
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+          cache: pip
+          cache-dependency-path: src-django/pyproject.toml
+
+      # The Playwright E2E suite is still the .NET project in tests/Budget.E2e.
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 10.0.x
           cache: true
           cache-dependency-path: '**/*.csproj'
 
-      - name: Restore & build
-        run: dotnet build Budget.slnx -c Release
+      - name: Install dependencies
+        working-directory: src-django
+        run: pip install -e ".[dev]"
 
-      - name: Install dotnet-ef
-        run: |
-          dotnet tool install --global dotnet-ef
-          echo "$HOME/.dotnet/tools" >> "$GITHUB_PATH"
+      - name: Lint
+        working-directory: src-django
+        run: ruff check config apps tests
+
+      - name: Type check
+        working-directory: src-django
+        run: mypy config apps
 
       - name: Apply migrations
-        env:
-          ConnectionStrings__Budget: "Host=postgres;Port=5432;Database=budget;Username=budget;Password=budget"
-        run: dotnet ef database update --project src/Budget.Web --no-build --configuration Release
+        working-directory: src-django
+        run: python manage.py migrate
 
-      - name: Unit tests
-        run: dotnet test tests/Budget.Tests/Budget.Tests.csproj -c Release --no-build
+      - name: Django tests
+        working-directory: src-django
+        run: python manage.py test tests
 
-      - name: Start web app
-        env:
-          ASPNETCORE_ENVIRONMENT: Development
-          ConnectionStrings__Budget: "Host=postgres;Port=5432;Database=budget;Username=budget;Password=budget"
+      - name: Build E2E project
+        run: dotnet build tests/Budget.E2e/Budget.E2e.csproj -c Release
+
+      - name: Install Playwright browsers
+        run: pwsh tests/Budget.E2e/bin/Release/net10.0/playwright.ps1 install --with-deps chromium
+
+      - name: Start Django app
+        working-directory: src-django
         run: |
-          dotnet run --project src/Budget.Web -c Release --no-build --urls http://localhost:5080 &
+          gunicorn config.wsgi:application --bind 127.0.0.1:5080 --workers 2 --access-logfile - &
           echo $! > app.pid
           for i in $(seq 1 60); do
-            if curl -sf -o /dev/null http://localhost:5080/; then
+            if curl -sf -o /dev/null http://127.0.0.1:5080/health/ready; then
               echo "App is ready"
               exit 0
             fi
@@ -85,11 +104,12 @@ jobs:
 
       - name: E2E tests
         env:
-          PLAYWRIGHT_BASE_URL: http://localhost:5080
+          PLAYWRIGHT_BASE_URL: http://127.0.0.1:5080
         run: dotnet test tests/Budget.E2e/Budget.E2e.csproj -c Release --no-build
 
-      - name: Stop web app
+      - name: Stop Django app
         if: always()
+        working-directory: src-django
         run: kill $(cat app.pid) 2>/dev/null || true
 
   build-image:
@@ -119,8 +139,8 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
-          context: .
-          file: ./Dockerfile
+          context: ./src-django
+          file: ./src-django/Dockerfile
           push: true
           tags: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
