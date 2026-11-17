@@ -62,4 +62,6 @@ This repo is spec-driven. `openspec/` holds `specs/` (accepted capabilities) and
 
 ## CI/CD
 
-Pushes to `main` run unit and E2E tests in `.github/workflows/ci.yml` (against a Postgres service container and a prebuilt Playwright container). The workflow then builds and pushes a Docker image to `registry.timo-hermans.nl` and bumps the image tag in the separate `timohermans/Cluster` GitOps repo via kustomize. Version format: `YYYY-MM-DD-<run_number>`. The `latest` tag is also updated.
+Pushes to `main` run unit and E2E tests in `.github/workflows/ci.yml`. The Django app in `src-django` is the deployed application: the workflow installs it with `pip install -e ".[dev]"`, runs `ruff`, `mypy`, `manage.py migrate` and `manage.py test` against a Postgres service container, then starts it with gunicorn on port 5080. The Playwright E2E suite is still the .NET project in `tests/Budget.E2e`, so the job also sets up .NET 10 and installs Chromium via `playwright.ps1` before running `dotnet test`.
+
+On pushes to `main` the workflow then builds and pushes `src-django/Dockerfile` to `images.timo-hermans.nl`. Version format: `YYYY-MM-DD-<run_number>`. The `latest` tag is also updated.

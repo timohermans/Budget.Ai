@@ -1,0 +1,24 @@
+{% load budget_extras %}
+<div id="transaction-{{ transaction.id }}" data-testid="transaction" class="transaction {{ transaction.css_class }}">
+  <div class="transaction-logo" data-testid="transaction-logo">
+    {% if transaction.logo_url %}
+      <img class="logo-image" src="{{ transaction.logo_url }}" alt="" loading="lazy" data-testid="transaction-logo-image" onerror="this.classList.add('hidden'); this.nextElementSibling.classList.remove('hidden');" />
+      <i class="logo-placeholder hidden" data-testid="transaction-logo-placeholder" data-lucide="wallet"></i>
+    {% else %}
+      <i class="logo-placeholder" data-testid="transaction-logo-placeholder" data-lucide="wallet"></i>
+    {% endif %}
+  </div>
+  <div class="transaction-date">
+    <b class="date" data-testid="date">{{ transaction.date|date:"d-m" }}</b>
+    <div>
+      {% if transaction.show_toggle %}
+        {% include "transactions/_toggle_control.html" %}
+      {% endif %}
+    </div>
+  </div>
+  <div>
+    <div><span class="amount" data-testid="amount">{{ transaction.amount|money }}</span></div>
+    <i data-testid="name-other-party">{{ transaction.display_name|default:transaction.name_other_party }}</i>
+    <small>{{ transaction.description }}</small>
+  </div>
+</div>

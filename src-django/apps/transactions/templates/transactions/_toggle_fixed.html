@@ -1,0 +1,10 @@
+{% load budget_extras %}
+{% include "transactions/_toggle_control.html" %}
+
+{% if show_oob %}
+  <h2 id="spent-total" data-testid="spent-total" hx-swap-oob="true">{{ spent|money }}</h2>
+  <small id="left-total" data-testid="left-total" hx-swap-oob="true">{{ left|money }}</small>
+  <small id="spent-week-{{ week_number }}" data-testid="spent-week-{{ week_number }}" hx-swap-oob="true">{{ week_spent|money }}</small>
+  <b id="left-week-{{ week_number }}" data-testid="left-week-{{ week_number }}" hx-swap-oob="true">{{ week_left|money }}</b>
+  <progress id="progress-week-{{ week_number }}" data-testid="progress-week-{{ week_number }}" class="{% if week_spent > week_budget %}negative{% endif %}" value="{{ week_spent }}" max="{{ week_budget }}" hx-swap-oob="true"></progress>
+{% endif %}
