@@ -129,7 +129,12 @@ URLs:
 - `/transactions/upload` — Rabobank CSV upload
 - `/transactions/toggle-fixed` — htmx toggle
 - `/merchants` — merchant administration
-- `/health/live`, `/health/ready`
+- `/health/live` — liveness probe; no checks, never touches the database
+- `/health/ready` — readiness probe; runs `SELECT 1` and returns `503 Unhealthy` if it fails
+
+Both health endpoints are anonymous and mirror the .NET app's
+`MapHealthChecks` behavior: `text/plain` `Healthy`/`Unhealthy` with
+`Cache-Control: no-store, no-cache`.
 
 ## Authentication
 
