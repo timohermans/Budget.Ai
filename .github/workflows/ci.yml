@@ -124,7 +124,7 @@ jobs:
 
       - name: Compute version
         id: version
-        run: echo "version=$(date +'%Y-%m-%d')-${{ github.run_number }}" >> "$GITHUB_OUTPUT"
+        run: echo "version=$(date +'%Y.%m.%d').${{ github.run_number }}" >> "$GITHUB_OUTPUT"
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
