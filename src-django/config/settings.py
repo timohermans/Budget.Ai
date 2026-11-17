@@ -1,8 +1,8 @@
 """Django settings for the Budget application.
 
-The project is a behavioural port of the ASP.NET Core app in ``src/Budget.Web``.
-Environment variables intentionally mirror the .NET configuration keys so both
-implementations can share the same ``.env`` file.
+Environment variables keep their historical names (for example
+``ConnectionStrings__Budget`` and ``Oidc__Authority``) so existing deployments
+keep working without changing their configuration.
 """
 
 from __future__ import annotations
@@ -213,9 +213,9 @@ if OIDC_ENABLED:
     OIDC_STORE_ID_TOKEN = True
 
 # --- OpenTelemetry -----------------------------------------------------------
-# Mirrors the .NET app: OpenTelemetry__Endpoint is the OTLP/HTTP logs endpoint
-# and OpenTelemetry__Headers carries the collector auth header. The standard
-# OTEL_* variables are honoured as well, so both apps can share one .env.
+# OpenTelemetry__Endpoint is the OTLP/HTTP logs endpoint and
+# OpenTelemetry__Headers carries the collector auth header. The standard
+# OTEL_* variables are honoured as well.
 OTEL_SERVICE_NAME = _env("OTEL_SERVICE_NAME", "budget-django")
 OTEL_ENVIRONMENT = (
     _env("OTEL_ENVIRONMENT") or _env("BUDGET_ENV") or ("development" if DEBUG else "production")
@@ -297,7 +297,7 @@ LOGGING = {
     },
 }
 
-# Startup diagnostics mirror the .NET app's single startup log line.
+# Emit a single startup log line with the effective configuration.
 _database = DATABASES["default"]
 DATABASE_DESCRIPTION = (
     f"{_database.get('HOST', '')}/{_database.get('NAME', '')}"

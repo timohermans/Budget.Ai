@@ -1,13 +1,10 @@
 """Health and root views.
 
-Behavioural port of the ASP.NET Core endpoints in ``src/Budget.Web/Program.cs``:
-
-* ``/health/live`` runs no checks at all (``Predicate = _ => false``) and never
-  touches the database, so a liveness probe cannot fail because of the database.
-* ``/health/ready`` verifies the database (``AddDbContextCheck``), which ``SELECT 1``
-  stands in for here.
+* ``/health/live`` runs no checks at all and never touches the database, so a
+  liveness probe cannot fail because of the database.
+* ``/health/ready`` verifies the database with ``SELECT 1``.
 * Both are anonymous and answer with ``text/plain`` "Healthy"/"Unhealthy" plus
-  the same no-cache headers ``MapHealthChecks`` emits.
+  no-cache headers so proxies never cache a probe.
 """
 
 from __future__ import annotations
@@ -20,7 +17,7 @@ from django.shortcuts import redirect
 
 logger = logging.getLogger(__name__)
 
-# Emitted by ASP.NET Core's health check middleware so proxies never cache a probe.
+# Disable caching so proxies never serve a stale probe result.
 _NO_CACHE_HEADERS = {
     "Cache-Control": "no-store, no-cache",
     "Pragma": "no-cache",

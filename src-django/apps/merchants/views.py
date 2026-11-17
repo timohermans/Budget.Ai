@@ -1,4 +1,4 @@
-"""Merchant administration views, ported from the Merchants feature controllers."""
+"""Merchant administration views."""
 
 from __future__ import annotations
 

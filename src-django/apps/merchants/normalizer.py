@@ -1,4 +1,4 @@
-"""Counterparty name normalization, ported from MerchantNameNormalizer.cs.
+"""Counterparty name normalization.
 
 The same function is used for transaction names, canonical merchant keys, and
 alias keys, so the values can never drift apart.

@@ -1,4 +1,4 @@
-"""Budget summary calculation, ported from SummaryCalculator.cs."""
+"""Budget summary calculation."""
 
 from __future__ import annotations
 

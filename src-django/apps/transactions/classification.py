@@ -1,4 +1,4 @@
-"""Transaction classification rules, ported from TransactionClassifier.cs."""
+"""Transaction classification rules."""
 
 from __future__ import annotations
 
@@ -10,7 +10,7 @@ FIXED_CODES = frozenset({"sb", "cb", "bg", "ei", "tb"})
 
 
 def is_fixed(transaction: Transaction, my_ibans: Collection[str]) -> bool:
-    """Classify a transaction as fixed using the same precedence as .NET."""
+    """Classify a transaction as fixed."""
     if transaction.is_not_fixed:
         return False
     if transaction.is_income() and transaction.is_from_own_account(my_ibans):

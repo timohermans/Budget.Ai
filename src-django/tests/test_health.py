@@ -1,4 +1,4 @@
-"""Health probe tests mirroring the ASP.NET Core endpoints."""
+"""Health probe tests."""
 
 from __future__ import annotations
 

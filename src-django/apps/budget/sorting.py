@@ -1,4 +1,4 @@
-"""Overview transaction sorting, ported from OverviewSort.cs."""
+"""Overview transaction sorting."""
 
 from __future__ import annotations
 

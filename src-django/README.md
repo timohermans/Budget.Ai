@@ -1,20 +1,19 @@
 # Budget — Django
 
-Django 6.1 port of the ASP.NET Core `Budget.Web` application. It implements the
-same budget overview, CSV import, fixed-transaction toggling, merchant logo map,
-sorting, and authentication behavior. It adopts the existing PostgreSQL schema
-created by the .NET app; after that one-time adoption Django owns the schema
-through migrations.
+Django 6.1 budget application: monthly overview, Rabobank CSV import,
+fixed-transaction toggling, merchant logo map, sorting, and authentication. It
+reuses the existing PostgreSQL schema, which Django owns through migrations
+after a one-time adoption (see below).
 
-The existing .NET Playwright suite passes unchanged against this app. During the
-port, all 42 E2E tests were run against Django on `http://localhost:5080` and
-against the Docker image.
+The Playwright suite in `tests/Budget.E2e` passes unchanged against this app.
+All 42 E2E tests were run against Django on `http://localhost:5080` and against
+the Docker image.
 
 ## Requirements
 
 - Python 3.12+ (tested with 3.14)
 - PostgreSQL 18 for real data, or SQLite for a scratch local database
-- The .NET E2E project if you want to run the Playwright suite
+- The .NET E2E project (`tests/Budget.E2e`) if you want to run the Playwright suite
 
 Runtime dependencies are pinned in `pyproject.toml`:
 
@@ -33,8 +32,8 @@ source .venv/bin/activate
 pip install -e ".[dev]"
 ```
 
-The app reads the repository-level `.env` (the same file the .NET app uses) and
-also accepts environment variables. The relevant keys are:
+The app reads the repository-level `.env` and also accepts environment
+variables. The relevant keys are:
 
 ```dotenv
 ConnectionStrings__Budget=Host=localhost;Database=budget;Username=budget;Password=budget
@@ -132,13 +131,13 @@ URLs:
 - `/health/live` — liveness probe; no checks, never touches the database
 - `/health/ready` — readiness probe; runs `SELECT 1` and returns `503 Unhealthy` if it fails
 
-Both health endpoints are anonymous and mirror the .NET app's
-`MapHealthChecks` behavior: `text/plain` `Healthy`/`Unhealthy` with
-`Cache-Control: no-store, no-cache`.
+Both health endpoints are anonymous and answer with `text/plain`
+`Healthy`/`Unhealthy` and `Cache-Control: no-store, no-cache`, so a probe result
+is never cached.
 
 ## Authentication
 
-The behavior mirrors the .NET app:
+Authentication has three modes:
 
 - **OIDC mode** — set `Oidc__Authority` (a Keycloak realm URL). The app includes
   `mozilla_django_oidc.urls` under `/oidc/`, maps the provider `sub` claim to the
@@ -158,8 +157,8 @@ test-mode session does not need a database table.
 
 ## OpenTelemetry
 
-Tracing and log export are configured from the same environment variables as the
-.NET app, so one `.env` serves both:
+Tracing and log export are configured from environment variables, so one `.env`
+configures the whole app:
 
 | Variable | Purpose |
 | --- | --- |
@@ -212,7 +211,7 @@ mypy config apps
 ruff check config apps tests
 ```
 
-## Playwright E2E (unchanged .NET suite)
+## Playwright E2E (.NET suite)
 
 Start Django on port 5080 with test mode, then run the existing suite from the
 repository root:
@@ -271,8 +270,8 @@ src-django/
   first.
 - The SQLite path is for local testing; production and real E2E runs use
   PostgreSQL.
-- Django adds its own auth/content-type/session tables to the shared database.
-  The .NET app ignores them.
+- Django adds its own auth/content-type/session tables to the shared database,
+  separate from the three business tables.
 
 ### Migration path DB from EF to Django ORM managed (once)
 

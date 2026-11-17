@@ -1,4 +1,4 @@
-"""Rabobank CSV importer, ported from RabobankCsvImporter.cs."""
+"""Rabobank CSV importer."""
 
 from __future__ import annotations
 

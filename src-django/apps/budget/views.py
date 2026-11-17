@@ -1,4 +1,4 @@
-"""Budget overview view, ported from OverviewController.cs."""
+"""Budget overview view."""
 
 from __future__ import annotations
 

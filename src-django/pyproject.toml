@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "budget-django"
 version = "0.1.0"
-description = "Django port of the Budget.Web ASP.NET Core application"
+description = "Budget application (Django)"
 requires-python = ">=3.12"
 dependencies = [
     "Django==6.1.2",

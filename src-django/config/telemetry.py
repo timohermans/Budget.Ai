@@ -1,6 +1,6 @@
 """OpenTelemetry tracing and log export.
 
-Configuration mirrors the .NET app: ``OpenTelemetry__Endpoint`` and
+Configuration comes from environment variables: ``OpenTelemetry__Endpoint`` and
 ``OpenTelemetry__Headers`` come from the shared ``.env`` file, and the standard
 ``OTEL_*`` variables are honoured as fallbacks. Telemetry stays disabled while
 no endpoint is configured.

@@ -45,8 +45,8 @@ class BudgetOIDCAuthenticationBackend(OIDCAuthenticationBackend):  # type: ignor
 class TestUser:
     """A database-free authenticated user used by the development test mode.
 
-    The .NET test mode deliberately does not create or look up a user record, so
-    this object only exposes the identity surface the rest of the app needs.
+    Test mode deliberately does not create or look up a user record, so this
+    object only exposes the identity surface the rest of the app needs.
     """
 
     is_authenticated = True
